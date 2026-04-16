@@ -72,8 +72,11 @@ export default function SignalsPage() {
                 <div key={sig.symbol} className="bg-[var(--surface-container)] rounded-xl p-4 min-w-[270px] snap-start flex-shrink-0">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-display text-base font-extrabold">{sig.symbol}</span>
-                      <span className="text-[9px] text-[var(--on-surface-variant)]">{sig.name}</span>
+                      <StockLogo symbol={sig.symbol} size={24} />
+                      <div>
+                        <span className="font-display text-base font-extrabold">{sig.symbol}</span>
+                        <span className="text-[9px] text-[var(--on-surface-variant)] ml-1">{sig.name}</span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <span className="font-data text-base font-bold"><Price usd={sig.price} /></span>
@@ -117,6 +120,7 @@ export default function SignalsPage() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium leading-snug line-clamp-2">{post.title}</p>
                     <div className="flex items-center gap-2 mt-1.5">
+                      {post.tickers?.[0] && <StockLogo symbol={post.tickers[0]} size={14} />}
                       <span className="font-data text-[9px] text-[var(--outline)] uppercase tracking-widest">{post.newsSource || post.author}</span>
                       <span className="font-data text-[9px] text-[var(--outline)]">·</span>
                       <span className="font-data text-[9px] text-[var(--outline)]">{timeAgo(post.created)}</span>
@@ -140,6 +144,7 @@ export default function SignalsPage() {
         <div className="flex flex-wrap gap-2">
           {redditTrending.slice(0, 6).map((tk: any) => (
             <div key={tk.symbol} className="flex items-center gap-1.5 bg-[var(--surface-container)] rounded-full px-3 py-1.5">
+              <StockLogo symbol={tk.symbol} size={16} />
               <span className="font-data text-xs font-bold text-[var(--primary-dim)]">${tk.symbol}</span>
               <span className="font-data text-[9px] text-[var(--secondary)]">{tk.mentions > 999 ? `${(tk.mentions/1000).toFixed(1)}K` : tk.mentions}</span>
             </div>
@@ -191,7 +196,10 @@ export default function SignalsPage() {
             {analystRatings.slice(0, 4).map((r: any) => (
               <div key={r.symbol} className="bg-[var(--surface-container)] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-data text-sm font-bold">${r.symbol}</span>
+                  <div className="flex items-center gap-2">
+                    <StockLogo symbol={r.symbol} size={20} />
+                    <span className="font-data text-sm font-bold">${r.symbol}</span>
+                  </div>
                   <span className={`font-data text-[9px] uppercase font-bold ${r.bullPct > 60 ? "text-[var(--primary)]" : r.bullPct < 40 ? "text-[var(--secondary)]" : "text-[var(--tertiary)]"}`}>
                     {r.bullPct > 60 ? "Bullish" : r.bullPct < 40 ? "Bearish" : "Mixed"}
                   </span>
