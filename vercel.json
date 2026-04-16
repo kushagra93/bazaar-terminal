@@ -3,9 +3,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "regions": ["bom1"],
-  "env": {
-    "FINNHUB_API_KEY": "@finnhub-api-key"
-  },
   "headers": [
     {
       "source": "/api/(.*)",

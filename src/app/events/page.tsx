@@ -84,8 +84,8 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 flex-wrap">
+      {/* Tabs — top row */}
+      <div className="flex items-center gap-2">
         {(["all", "earnings", "economic"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-xs font-body font-medium uppercase tracking-wider border transition ${
@@ -93,26 +93,26 @@ export default function EventsPage() {
             }`}
           >{t === "all" ? "All" : t === "earnings" ? "Earnings" : "Economic Calendar"}</button>
         ))}
+      </div>
 
-        {/* Category + Month filters for economic tab */}
-        {tab !== "earnings" && <>
-          <span className="text-[var(--border-default)]">|</span>
-          {["all", "fed", "inflation", "jobs", "gdp", "consumer", "manufacturing"].map(c => (
-            <button key={c} onClick={() => setCatFilter(c)}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
-                catFilter === c ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-dim)] border-[var(--border-dim)]"
-              }`}
-            >{c === "all" ? "All" : CATEGORY_CONFIG[c]?.emoji + " " + (CATEGORY_CONFIG[c]?.label || c)}</button>
-          ))}
-          <span className="text-[var(--border-default)]">|</span>
-          {["all", ...MONTHS].map(m => (
-            <button key={m} onClick={() => setMonthFilter(m)}
-              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
-                monthFilter === m ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-dim)] border-[var(--border-dim)]"
-              }`}
-            >{m === "all" ? "Q2" : m}</button>
-          ))}
-        </>}
+      {/* Category + Month filters — always visible */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <span className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider mr-1">Filter:</span>
+        {["all", "fed", "inflation", "jobs", "gdp", "consumer", "manufacturing"].map(c => (
+          <button key={c} onClick={() => { setCatFilter(c); if (tab === "earnings") setTab("all"); }}
+            className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
+              catFilter === c ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-secondary)] border-[var(--border-dim)] hover:border-[var(--border-subtle)]"
+            }`}
+          >{c === "all" ? "All" : CATEGORY_CONFIG[c]?.emoji + " " + (CATEGORY_CONFIG[c]?.label || c)}</button>
+        ))}
+        <span className="text-[var(--border-default)] mx-1">|</span>
+        {["all", ...MONTHS].map(m => (
+          <button key={m} onClick={() => { setMonthFilter(m); if (tab === "earnings") setTab("all"); }}
+            className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
+              monthFilter === m ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-secondary)] border-[var(--border-dim)] hover:border-[var(--border-subtle)]"
+            }`}
+          >{m === "all" ? "Q2" : m}</button>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
