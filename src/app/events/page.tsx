@@ -1,45 +1,91 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
 import { useEvents, useStocks } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
-import { Calendar, Mic, BarChart3, Clock, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
+import { Q2_2026_CALENDAR, CATEGORY_CONFIG, ScheduledEvent } from "@/config/economic-calendar";
+import { Calendar, Filter, ChevronDown } from "lucide-react";
 
-const IMPACT_STYLES: Record<string, string> = {
-  high: "bg-red-500",
-  medium: "bg-amber-500",
-  low: "bg-slate-500",
-};
+const MONTHS = ["April", "May", "June"];
 
 export default function EventsPage() {
   const { events, loading } = useEvents();
   const { stocks } = useStocks(30_000);
   const { format } = useCurrency();
   const [tab, setTab] = useState<"all" | "earnings" | "economic">("all");
+  const [catFilter, setCatFilter] = useState<string>("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all");
 
   const earnings = events.earnings || [];
-  const economic = events.economic || [];
-  const news = events.news || [];
 
-  // Tonight's watchlist: stocks with upcoming earnings
-  const watchlist = earnings
-    .filter((e: any) => e.daysAway <= 7)
-    .map((e: any) => {
-      const stock = stocks.find((s: any) => s.symbol === e.symbol);
-      return { ...e, stock };
-    })
-    .slice(0, 8);
+  // Full quarter economic calendar
+  const allEco = useMemo(() => {
+    let list = [...Q2_2026_CALENDAR];
+    if (catFilter !== "all") list = list.filter(e => e.category === catFilter);
+    if (monthFilter !== "all") {
+      const monthNum = monthFilter === "April" ? "04" : monthFilter === "May" ? "05" : "06";
+      list = list.filter(e => e.date.includes(`-${monthNum}-`));
+    }
+    return list;
+  }, [catFilter, monthFilter]);
+
+  // Group by week
+  const groupedByWeek = useMemo(() => {
+    const groups: { weekLabel: string; events: ScheduledEvent[] }[] = [];
+    let currentWeek = "";
+    let currentGroup: ScheduledEvent[] = [];
+
+    for (const e of allEco) {
+      const d = new Date(e.date);
+      const weekStart = new Date(d);
+      weekStart.setDate(d.getDate() - d.getDay() + 1); // Monday
+      const label = weekStart.toLocaleDateString("en-US", { month: "short", day: "numeric" }) + " – " +
+        new Date(weekStart.getTime() + 4 * 86400000).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+      if (label !== currentWeek) {
+        if (currentGroup.length > 0) groups.push({ weekLabel: currentWeek, events: currentGroup });
+        currentWeek = label;
+        currentGroup = [e];
+      } else {
+        currentGroup.push(e);
+      }
+    }
+    if (currentGroup.length > 0) groups.push({ weekLabel: currentWeek, events: currentGroup });
+    return groups;
+  }, [allEco]);
+
+  // Watchlist
+  const watchlist = earnings.filter((e: any) => e.daysAway <= 14).map((e: any) => ({
+    ...e, stock: stocks.find((s: any) => s.symbol === e.symbol),
+  })).slice(0, 8);
+
+  // Stats
+  const highImpact = allEco.filter(e => e.impact === "high").length;
+  const fedEvents = allEco.filter(e => e.category === "fed").length;
+  const today = new Date().toISOString().split("T")[0];
+  const thisWeekEvents = allEco.filter(e => {
+    const diff = (new Date(e.date).getTime() - Date.now()) / 86400000;
+    return diff >= 0 && diff <= 7;
+  });
 
   return (
-    <div className="max-w-[1440px] mx-auto space-y-5">
-      <h1 className="font-display text-2xl font-bold flex items-center gap-3">
-        Events
-        <span className="text-[10px] font-data text-[var(--text-secondary)] font-normal">Real-time from Finnhub</span>
-      </h1>
+    <div className="max-w-[1440px] mx-auto space-y-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Events</h1>
+          <p className="text-[11px] font-body text-[var(--text-dim)] mt-0.5">Q2 2026 Economic Calendar + Live Earnings · Real-time from Finnhub</p>
+        </div>
+        <div className="flex items-center gap-3 text-[10px] font-data">
+          <span className="text-[var(--bazaar-gold)]">{highImpact} high-impact</span>
+          <span className="text-[var(--event-fed)]">{fedEvents} Fed events</span>
+          <span className="text-[var(--text-dim)]">{allEco.length} total</span>
+        </div>
+      </div>
 
       {/* Tabs */}
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {(["all", "earnings", "economic"] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-4 py-2 rounded-lg text-xs font-body font-medium uppercase tracking-wider border transition ${
@@ -47,17 +93,37 @@ export default function EventsPage() {
             }`}
           >{t === "all" ? "All" : t === "earnings" ? "Earnings" : "Economic Calendar"}</button>
         ))}
+
+        {/* Category + Month filters for economic tab */}
+        {tab !== "earnings" && <>
+          <span className="text-[var(--border-default)]">|</span>
+          {["all", "fed", "inflation", "jobs", "gdp", "consumer", "manufacturing"].map(c => (
+            <button key={c} onClick={() => setCatFilter(c)}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
+                catFilter === c ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-dim)] border-[var(--border-dim)]"
+              }`}
+            >{c === "all" ? "All" : CATEGORY_CONFIG[c]?.emoji + " " + (CATEGORY_CONFIG[c]?.label || c)}</button>
+          ))}
+          <span className="text-[var(--border-default)]">|</span>
+          {["all", ...MONTHS].map(m => (
+            <button key={m} onClick={() => setMonthFilter(m)}
+              className={`px-2.5 py-1.5 rounded-lg text-[10px] font-body font-medium border transition ${
+                monthFilter === m ? "text-[var(--bazaar-gold)] border-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-dim)] border-[var(--border-dim)]"
+              }`}
+            >{m === "all" ? "Q2" : m}</button>
+          ))}
+        </>}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* ── Main Content (2 cols) ── */}
-        <div className="lg:col-span-2 space-y-5">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* ── Main Content ── */}
+        <div className="lg:col-span-2 space-y-4">
 
-          {/* Earnings Section */}
+          {/* Earnings */}
           {(tab === "all" || tab === "earnings") && earnings.length > 0 && (
             <div>
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Calendar size={12} className="text-[var(--event-earnings)]" /> Upcoming Earnings
+              <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Calendar size={11} className="text-[var(--event-earnings)]" /> Upcoming Earnings (Live from Finnhub)
               </div>
               <div className="space-y-2">
                 {earnings.map((e: any) => (
@@ -68,24 +134,26 @@ export default function EventsPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-body text-base font-bold">{e.symbol}</span>
-                            <span className="text-[9px] font-body uppercase px-1.5 py-0.5 rounded font-semibold text-[var(--event-earnings)] bg-[rgba(129,140,248,0.1)]">EARNINGS</span>
-                            {e.daysAway <= 0 && <span className="text-[9px] font-body font-bold px-1.5 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)] animate-pulse">TODAY</span>}
-                            {e.daysAway === 1 && <span className="text-[9px] font-body font-bold px-1.5 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)]">TOMORROW</span>}
+                            <span className="text-[8px] font-body uppercase px-1.5 py-0.5 rounded font-semibold text-[var(--event-earnings)] bg-[rgba(129,140,248,0.1)]">EARNINGS</span>
+                            {e.daysAway <= 0 && <span className="text-[8px] font-body font-bold px-1.5 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)] animate-pulse">TODAY</span>}
+                            {e.daysAway === 1 && <span className="text-[8px] font-body font-bold px-1.5 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)]">TOMORROW</span>}
                           </div>
-                          <div className="text-xs font-body text-[var(--text-secondary)] mt-0.5">{e.title}</div>
+                          <div className="text-[10px] font-body text-[var(--text-secondary)] mt-0.5">{e.title}</div>
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-data text-sm text-[var(--text-primary)]">{e.date}</div>
-                        <div className="font-data text-[10px] text-[var(--text-secondary)]">{e.time}</div>
+                        <div className="font-data text-[10px] text-[var(--text-secondary)]">
+                          {e.time}
+                          {e.time === "After Close" && <span className="text-[var(--bazaar-gold)] ml-1">→ ~1:30 AM IST</span>}
+                          {e.time === "Before Open" && <span className="text-[var(--bazaar-gold)] ml-1">→ ~5:30 PM IST</span>}
+                        </div>
                       </div>
                     </div>
-                    {/* EPS data if available */}
                     {(e.epsEstimate || e.epsActual) && (
-                      <div className="mt-3 flex gap-6 text-xs">
-                        {e.epsEstimate && <div><span className="font-body text-[var(--text-secondary)]">EPS Est: </span><span className="font-data text-[var(--text-primary)]">${e.epsEstimate}</span></div>}
-                        {e.epsActual && <div><span className="font-body text-[var(--text-secondary)]">EPS Act: </span><span className={`font-data font-semibold ${e.epsActual > e.epsEstimate ? "text-[var(--bull)]" : "text-[var(--bear)]"}`}>${e.epsActual}</span></div>}
-                        {e.revenueEstimate && <div><span className="font-body text-[var(--text-secondary)]">Rev Est: </span><span className="font-data text-[var(--text-primary)]">{format(e.revenueEstimate)}</span></div>}
+                      <div className="mt-2 flex gap-4 text-[10px]">
+                        {e.epsEstimate && <span className="font-body text-[var(--text-dim)]">EPS Est: <span className="font-data text-[var(--text-primary)]">${e.epsEstimate}</span></span>}
+                        {e.revenueEstimate && <span className="font-body text-[var(--text-dim)]">Rev Est: <span className="font-data text-[var(--text-primary)]">{format(e.revenueEstimate)}</span></span>}
                       </div>
                     )}
                   </div>
@@ -94,138 +162,142 @@ export default function EventsPage() {
             </div>
           )}
 
-          {/* Economic Calendar — Investing.com style */}
-          {(tab === "all" || tab === "economic") && economic.length > 0 && (
+          {/* Economic Calendar — Full Quarter */}
+          {(tab === "all" || tab === "economic") && (
             <div>
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-3 flex items-center gap-2">
-                <BarChart3 size={12} className="text-[var(--event-fed)]" /> Economic Calendar
+              <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-2 flex items-center gap-2">
+                📅 Q2 2026 Economic Calendar — {allEco.length} events
               </div>
-              <div className="card overflow-hidden">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[var(--border-dim)]" style={{ background: "var(--bg-overlay)" }}>
-                      <th className="px-3 py-2.5 text-left text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-12">Time</th>
-                      <th className="px-3 py-2.5 text-left text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-6">🌍</th>
-                      <th className="px-3 py-2.5 text-center text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-16">Impact</th>
-                      <th className="px-3 py-2.5 text-left text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider">Event</th>
-                      <th className="px-3 py-2.5 text-right text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-20">Actual</th>
-                      <th className="px-3 py-2.5 text-right text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-20">Estimate</th>
-                      <th className="px-3 py-2.5 text-right text-[9px] font-body font-medium text-[var(--text-secondary)] uppercase tracking-wider w-20">Previous</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {economic.map((e: any, i: number) => {
-                      const actualBetter = e.actual != null && e.estimate != null && parseFloat(e.actual) > parseFloat(e.estimate);
-                      const actualWorse = e.actual != null && e.estimate != null && parseFloat(e.actual) < parseFloat(e.estimate);
-                      return (
-                        <tr key={e.id || i} className="table-row border-b border-[var(--border-dim)] hover:bg-[var(--bg-elevated)] transition">
-                          <td className="px-3 py-2.5">
-                            <div className="font-data text-[10px] text-[var(--text-secondary)]">{e.timeIST || e.timeET}</div>
-                          </td>
-                          <td className="px-3 py-2.5 text-[10px]">{e.country === "US" ? "🇺🇸" : e.country === "EU" ? "🇪🇺" : e.country === "GB" ? "🇬🇧" : e.country === "JP" ? "🇯🇵" : e.country === "CN" ? "🇨🇳" : "🌍"}</td>
-                          <td className="px-3 py-2.5 text-center">
-                            <div className="flex justify-center gap-0.5">
-                              {[1, 2, 3].map(level => (
-                                <div key={level} className={`w-2 h-2.5 rounded-sm ${
-                                  e.impact === "high" ? (level <= 3 ? IMPACT_STYLES.high : "bg-[var(--border-dim)]")
-                                  : e.impact === "medium" ? (level <= 2 ? IMPACT_STYLES.medium : "bg-[var(--border-dim)]")
-                                  : (level <= 1 ? IMPACT_STYLES.low : "bg-[var(--border-dim)]")
-                                }`} />
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <div className="font-body text-xs text-[var(--text-primary)]">{e.event}</div>
-                          </td>
-                          <td className="px-3 py-2.5 text-right">
-                            {e.actual != null ? (
-                              <span className={`font-data text-xs font-semibold ${actualBetter ? "text-[var(--bull)]" : actualWorse ? "text-[var(--bear)]" : "text-[var(--text-primary)]"}`}>
-                                {e.actual}{e.unit}
-                              </span>
-                            ) : <span className="font-data text-xs text-[var(--text-dim)]">—</span>}
-                          </td>
-                          <td className="px-3 py-2.5 text-right font-data text-xs text-[var(--text-secondary)]">
-                            {e.estimate != null ? `${e.estimate}${e.unit}` : "—"}
-                          </td>
-                          <td className="px-3 py-2.5 text-right font-data text-xs text-[var(--text-dim)]">
-                            {e.prev != null ? `${e.prev}${e.unit}` : "—"}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
 
-          {/* News */}
-          {tab === "all" && news.length > 0 && (
-            <div>
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-3">Latest News</div>
-              <div className="space-y-2">
-                {news.map((n: any) => (
-                  <div key={n.id} className="card p-3 flex items-start gap-3">
-                    <span className="text-sm mt-0.5">📰</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-body text-xs font-semibold text-[var(--bazaar-gold)]">{n.symbol}</span>
-                        <span className="font-body text-[10px] text-[var(--text-dim)]">{n.source}</span>
-                      </div>
-                      <div className="font-body text-sm text-[var(--text-primary)] mt-0.5 line-clamp-2">{n.headline}</div>
+              {groupedByWeek.map(group => {
+                const isPast = new Date(group.events[0].date) < new Date(today);
+                const isThisWeek = group.events.some(e => {
+                  const diff = (new Date(e.date).getTime() - Date.now()) / 86400000;
+                  return diff >= -1 && diff <= 7;
+                });
+                return (
+                  <div key={group.weekLabel} className={`mb-3 ${isPast ? "opacity-40" : ""}`}>
+                    <div className={`text-[9px] font-data uppercase tracking-wider mb-1.5 px-1 ${isThisWeek ? "text-[var(--bazaar-gold)]" : "text-[var(--text-dim)]"}`}>
+                      {isThisWeek && "→ "}{group.weekLabel}{isThisWeek && " ← THIS WEEK"}
+                    </div>
+                    <div className="card overflow-hidden">
+                      <table className="w-full">
+                        <tbody>
+                          {group.events.map((e, i) => {
+                            const cat = CATEGORY_CONFIG[e.category];
+                            const isToday = e.date === today;
+                            const isPastEvent = new Date(e.date) < new Date(today);
+                            return (
+                              <tr key={`${e.date}-${e.event}-${i}`}
+                                className={`border-b border-[var(--border-dim)] last:border-0 transition ${isToday ? "bg-[var(--bazaar-gold-dim)]" : "hover:bg-[var(--bg-elevated)]"}`}
+                                style={{ height: 40 }}
+                              >
+                                <td className="px-3 py-2 w-20">
+                                  <div className="font-data text-[10px] text-[var(--text-secondary)]">
+                                    {new Date(e.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                  </div>
+                                </td>
+                                <td className="px-2 py-2 w-16">
+                                  <div className="font-data text-[9px] text-[var(--bazaar-gold)]">{e.timeIST}</div>
+                                  <div className="font-data text-[8px] text-[var(--text-dim)]">{e.timeET} ET</div>
+                                </td>
+                                <td className="px-2 py-2 w-6 text-center">
+                                  <div className="flex gap-0.5 justify-center">
+                                    {[1,2,3].map(l => (
+                                      <div key={l} className={`w-1.5 h-2 rounded-sm ${
+                                        e.impact === "high" ? (l <= 3 ? "bg-red-500" : "bg-[var(--border-dim)]")
+                                        : e.impact === "medium" ? (l <= 2 ? "bg-amber-500" : "bg-[var(--border-dim)]")
+                                        : (l <= 1 ? "bg-slate-500" : "bg-[var(--border-dim)]")
+                                      }`} />
+                                    ))}
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs">{cat?.emoji}</span>
+                                    <div>
+                                      <div className="font-body text-[12px] text-[var(--text-primary)] font-medium">{e.event}</div>
+                                      <div className="font-body text-[9px] text-[var(--text-dim)]">{e.detail}</div>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-3 py-2 w-16">
+                                  <span className="text-[8px] font-body font-semibold uppercase px-1.5 py-0.5 rounded" style={{ color: cat?.color, background: `${cat?.color}12` }}>
+                                    {cat?.label}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           )}
 
-          {loading && <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 rounded-xl shimmer" />)}</div>}
+          {loading && <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-14 rounded-xl shimmer" />)}</div>}
         </div>
 
-        {/* ── Sidebar: Tonight's Watchlist ── */}
+        {/* ── Sidebar ── */}
         <div className="space-y-4">
-          <div className="card p-4 sticky top-[100px]">
-            <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-4 flex items-center gap-2">
-              <AlertTriangle size={12} className="text-[var(--bazaar-gold)]" /> Earnings Watchlist
-            </div>
+          {/* This week highlight */}
+          <div className="card p-4" style={{ background: "linear-gradient(155deg, rgba(232,160,69,0.05), var(--bg-surface))", borderColor: "rgba(232,160,69,0.12)" }}>
+            <div className="text-[10px] font-body text-[var(--bazaar-gold)] uppercase tracking-wider mb-3">This Week</div>
+            {thisWeekEvents.length === 0 ? (
+              <div className="text-[11px] text-[var(--text-dim)] py-2">No major events this week</div>
+            ) : thisWeekEvents.slice(0, 6).map((e, i) => {
+              const cat = CATEGORY_CONFIG[e.category];
+              return (
+                <div key={i} className="flex items-center gap-2 py-1.5 border-b border-[var(--border-dim)] last:border-0">
+                  <span className="text-xs">{cat?.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-body text-[11px] font-medium text-[var(--text-primary)] truncate">{e.event}</div>
+                    <div className="font-data text-[9px] text-[var(--bazaar-gold)]">{e.timeIST}</div>
+                  </div>
+                  <div className="flex gap-0.5">
+                    {[1,2,3].map(l => <div key={l} className={`w-1 h-1.5 rounded-sm ${e.impact === "high" ? "bg-red-500" : e.impact === "medium" ? "bg-amber-500" : "bg-slate-500"}`} style={{ opacity: l <= (e.impact === "high" ? 3 : e.impact === "medium" ? 2 : 1) ? 1 : 0.15 }} />)}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Earnings watchlist */}
+          <div className="card p-4">
+            <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-3">Earnings Watchlist</div>
             {loading ? (
-              <div className="space-y-3">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-10 rounded shimmer" />)}</div>
+              <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-9 rounded shimmer" />)}</div>
             ) : watchlist.length === 0 ? (
-              <div className="text-xs text-[var(--text-secondary)] py-4 text-center">No earnings this week</div>
+              <div className="text-[11px] text-[var(--text-dim)] py-3 text-center">No earnings next 2 weeks</div>
             ) : watchlist.map((e: any) => (
-              <div key={e.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--border-dim)] last:border-0">
-                <StockLogo symbol={e.symbol} size={24} />
+              <div key={e.id} className="flex items-center gap-2 py-1.5 border-b border-[var(--border-dim)] last:border-0">
+                <StockLogo symbol={e.symbol} size={20} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-body text-sm font-semibold">{e.symbol}</span>
-                    {e.daysAway <= 1 && <span className="text-[8px] font-body font-bold px-1 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)]">{e.daysAway <= 0 ? "TODAY" : "TMW"}</span>}
+                    <span className="font-body text-[12px] font-semibold">{e.symbol}</span>
+                    {e.daysAway <= 1 && <span className="text-[7px] font-body font-bold px-1 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)]">{e.daysAway <= 0 ? "TODAY" : "TMW"}</span>}
                   </div>
-                  <div className="text-[10px] font-body text-[var(--text-secondary)]">
-                    {e.time} · {e.date}
-                    {e.time === "After Close" && <span className="text-[var(--bazaar-gold)] ml-1">→ ~1:30 AM IST</span>}
-                    {e.time === "Before Open" && <span className="text-[var(--bazaar-gold)] ml-1">→ ~5:30 PM IST</span>}
-                  </div>
+                  <div className="font-data text-[9px] text-[var(--text-dim)]">{e.time} · {e.date}</div>
                 </div>
-                <div className="text-right">
-                  {e.stock && (
-                    <span className={`font-data text-xs font-medium ${(e.stock.change24h || 0) >= 0 ? "text-[var(--bull)]" : "text-[var(--bear)]"}`}>
-                      {(e.stock.change24h || 0) >= 0 ? "+" : ""}{(e.stock.change24h || 0).toFixed(2)}%
-                    </span>
-                  )}
-                  <div className="font-data text-[10px] text-[var(--text-dim)]">{e.daysAway}d</div>
-                </div>
+                {e.stock && (
+                  <span className={`font-data text-[10px] font-medium ${(e.stock.stockChange || 0) >= 0 ? "text-[var(--bull)]" : "text-[var(--bear)]"}`}>
+                    {(e.stock.stockChange || 0) >= 0 ? "+" : ""}{(e.stock.stockChange || 0).toFixed(2)}%
+                  </span>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Impact Legend */}
+          {/* Impact legend */}
           <div className="card p-4">
-            <div className="text-[10px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-2">Impact Legend</div>
-            <div className="space-y-1.5 text-[10px] font-body text-[var(--text-secondary)]">
-              <div className="flex items-center gap-2"><div className="flex gap-0.5">{[1,2,3].map(i=><div key={i} className="w-2 h-2.5 rounded-sm bg-red-500"/>)}</div> High — expect 1-2% swings</div>
-              <div className="flex items-center gap-2"><div className="flex gap-0.5">{[1,2].map(i=><div key={i} className="w-2 h-2.5 rounded-sm bg-amber-500"/>)}<div className="w-2 h-2.5 rounded-sm bg-[var(--border-dim)]"/></div> Medium — moderate volatility</div>
-              <div className="flex items-center gap-2"><div className="flex gap-0.5"><div className="w-2 h-2.5 rounded-sm bg-slate-500"/>{[1,2].map(i=><div key={i} className="w-2 h-2.5 rounded-sm bg-[var(--border-dim)]"/>)}</div> Low — minimal impact</div>
+            <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-2">Impact Legend</div>
+            <div className="space-y-1.5 text-[9px] font-body text-[var(--text-dim)]">
+              <div className="flex items-center gap-2"><div className="flex gap-0.5">{[1,2,3].map(i=><div key={i} className="w-1.5 h-2 rounded-sm bg-red-500"/>)}</div> High — expect 1-2% swings</div>
+              <div className="flex items-center gap-2"><div className="flex gap-0.5">{[1,2].map(i=><div key={i} className="w-1.5 h-2 rounded-sm bg-amber-500"/>)}<div className="w-1.5 h-2 rounded-sm bg-[var(--border-dim)]"/></div> Medium — moderate volatility</div>
+              <div className="flex items-center gap-2"><div className="flex gap-0.5"><div className="w-1.5 h-2 rounded-sm bg-slate-500"/>{[1,2].map(i=><div key={i} className="w-1.5 h-2 rounded-sm bg-[var(--border-dim)]"/>)}</div> Low — minimal impact</div>
             </div>
           </div>
         </div>
