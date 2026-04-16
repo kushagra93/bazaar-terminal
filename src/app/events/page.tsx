@@ -82,7 +82,7 @@ export default function EventsPage() {
     <div className="max-w-[1400px] mx-auto space-y-8">
       {/* ═══ HERO ═══ */}
       <div>
-        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter">MACRO_<span className="text-[var(--primary)]">CALENDAR</span></h1>
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter">MACRO_<span className="text-[var(--primary)]">CALENDAR</span></h1>
         <p className="text-sm text-[var(--on-surface-variant)] mt-2 max-w-xl leading-relaxed">
           Real-time synchronization of global economic indicators and central bank interventions.{" "}
           <span className="italic text-[var(--primary)]">High-fidelity data stream.</span>

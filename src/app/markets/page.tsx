@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
+import { useLanguage } from "@/lib/language";
 import { useStocks, CONTEXT_SYMBOLS, SECTOR_MAP } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 
@@ -10,6 +11,7 @@ type SortKey = "symbol" | "price" | "change" | "openInterest" | "volume24h" | "f
 export default function MarketsPage() {
   const { format } = useCurrency();
   const { stocks, loading, lastUpdated } = useStocks(3_000);
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [sectorFilter, setSectorFilter] = useState("all");
   const [sortKey, setSortKey] = useState<SortKey>("volume24h");
@@ -45,7 +47,7 @@ export default function MarketsPage() {
       {/* Hero */}
       <div>
         <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">Market Intelligence</span>
-        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">MARKETS</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter mt-2">{t("markets.title")}</h1>
       </div>
 
       {/* Context cards */}

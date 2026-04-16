@@ -69,7 +69,7 @@ export default function SentimentPage() {
       {/* Hero */}
       <div>
         <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">{t("sentiment.engine")}</span>
-        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">{t("sentiment.title")}</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tighter mt-2">{t("sentiment.title")}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

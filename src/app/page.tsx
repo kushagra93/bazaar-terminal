@@ -45,19 +45,20 @@ export default function OverviewPage() {
   return (
     <div className="max-w-[1400px] mx-auto space-y-10">
 
-      {/* ═══ HERO: Giant Session Title ═══ */}
+      {/* ═══ HERO ═══ */}
       <div className="flex items-end justify-between">
         <div>
           <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">{t("overview.terminal_intelligence")}</span>
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter mt-2 text-[var(--on-surface)]">
-            {t(`sessions.${session.key}`)}
+          <h1 className="font-display text-3xl md:text-4xl font-extrabold tracking-tighter mt-2 text-[var(--on-surface)]">
+            {t("overview.market_pulse")}
           </h1>
         </div>
-        <div className="hidden md:flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--primary)]10 rounded-full">
-            <div className="w-2 h-2 rounded-full bg-[var(--primary-dim)] animate-pulse" style={{ boxShadow: "0 0 8px var(--primary)" }} />
-            <span className="font-data text-xs text-[var(--primary-dim)] uppercase tracking-widest">{istTime}</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full" style={{ background: `${session.color}10`, color: session.color }}>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: session.color, boxShadow: `0 0 6px ${session.color}` }} />
+            <span className="font-data text-[10px] uppercase tracking-widest font-bold">{t(`sessions.${session.key}`)}</span>
           </div>
+          <span className="font-data text-xs text-[var(--on-surface-variant)] hidden md:block">{istTime}</span>
         </div>
       </div>
 
