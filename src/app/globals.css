@@ -11,10 +11,10 @@
   --bg-overlay: rgba(13,15,20,0.95);
 
   /* Borders */
-  --border-dim: rgba(255,255,255,0.04);
-  --border-subtle: rgba(255,255,255,0.07);
-  --border-default: rgba(255,255,255,0.11);
-  --border-active: rgba(255,255,255,0.20);
+  --border-dim: rgba(255,255,255,0.06);    /* slightly more visible */
+  --border-subtle: rgba(255,255,255,0.10);
+  --border-default: rgba(255,255,255,0.14);
+  --border-active: rgba(255,255,255,0.24);
 
   /* Brand — Bazaar Spice Palette */
   --bazaar-gold: #e8a045;
@@ -47,8 +47,8 @@
 
   /* Text */
   --text-primary: #e2e8f0;
-  --text-secondary: #64748b;
-  --text-dim: #2d3748;
+  --text-secondary: #8b9ab5;  /* brightened from #64748b — more legible on dark bg */
+  --text-dim: #4a5a72;        /* brightened from #2d3748 — no longer invisible */
   --text-data: #e2e8f0;
 
   /* Sectors */
