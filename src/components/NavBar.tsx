@@ -6,6 +6,7 @@ import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime, SessionInfo } from "@/lib/session";
 import { useStocks, CONTEXT_SYMBOLS } from "@/lib/data";
 import { Lang, t as translate } from "@/config/i18n";
+import { StockLogo } from "@/components/StockLogo";
 
 const NAV_KEYS = [
   { href: "/", key: "nav.overview" },
@@ -133,7 +134,8 @@ function TickerStrip() {
       <div className="flex items-center px-4 border-r border-[var(--border-dim)] flex-shrink-0">
         {contextStocks.map((s, i) => (
           <span key={s.symbol} className="ticker-item">
-            <span className="text-[var(--text-secondary)] font-semibold">{s.symbol}</span>
+            <StockLogo symbol={s.symbol} size={14} />
+            <span className="text-[var(--on-surface-variant)] font-semibold">{s.symbol}</span>
             <span className="text-[var(--text-primary)]">{format(s.price)}</span>
             <span className={s.change24h >= 0 ? "text-[var(--bull)]" : "text-[var(--bear)]"}>
               {s.change24h >= 0 ? "▲" : "▼"}{Math.abs(s.change24h).toFixed(2)}%
@@ -147,7 +149,8 @@ function TickerStrip() {
         <div className="ticker-scroll">
           {[...scrollStocks, ...scrollStocks].map((s, i) => (
             <span key={`${s.symbol}-${i}`} className="ticker-item">
-              <span className="text-[var(--text-secondary)]">{s.symbol}</span>
+              <StockLogo symbol={s.symbol} size={14} />
+              <span className="text-[var(--on-surface-variant)]">{s.symbol}</span>
               <span className="text-[var(--text-primary)]">{format(s.price)}</span>
               <span className={s.change24h >= 0 ? "text-[var(--bull)]" : "text-[var(--bear)]"}>
                 {s.change24h >= 0 ? "▲" : "▼"}{Math.abs(s.change24h).toFixed(2)}%
