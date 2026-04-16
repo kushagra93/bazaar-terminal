@@ -161,25 +161,43 @@ export default function SentimentPage() {
               </div>
             </div>
 
-            {/* Reddit Posts */}
+            {/* Live Feed — Reddit + News */}
             <div>
-              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-3">Reddit Feed</p>
-              <div className="space-y-3">
-                {posts.slice(0, 6).map((post: any) => (
-                  <a key={post.id} href={post.url} target="_blank" rel="noopener"
-                    className="block hover:bg-[var(--surface-bright)] rounded-xl p-3 -mx-3 transition-colors">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`w-1.5 h-1.5 rounded-full ${post.sentiment === "bullish" ? "bg-[var(--primary)]" : post.sentiment === "bearish" ? "bg-[var(--secondary)]" : "bg-[var(--outline)]"}`} />
-                      <span className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-widest">r/{post.subreddit}</span>
-                      <span className="font-data text-[9px] text-[var(--outline)]">{timeAgo(post.created)}</span>
-                      {post.tickers?.map((t: string) => (
-                        <span key={t} className="font-data text-[9px] text-[var(--primary-dim)] font-bold">${t}</span>
-                      ))}
-                    </div>
-                    <p className="text-sm leading-snug line-clamp-2">{post.title}</p>
-                  </a>
-                ))}
-                {posts.length === 0 && <div className="h-40 shimmer rounded-xl" />}
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest">Live Feed</p>
+                {social?.sourceBreakdown && (
+                  <div className="flex gap-2">
+                    <span className="font-data text-[8px] px-2 py-0.5 rounded-full bg-[var(--surface-highest)] text-[var(--on-surface-variant)]">Reddit {social.sourceBreakdown.reddit}</span>
+                    <span className="font-data text-[8px] px-2 py-0.5 rounded-full bg-[var(--surface-highest)] text-[var(--on-surface-variant)]">News {social.sourceBreakdown.finnhub_news + (social.sourceBreakdown.google_news || 0)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                {posts.slice(0, 15).map((post: any) => {
+                  const sourceLabel = post.source === "reddit" ? `r/${post.subreddit}` : post.source === "finnhub_news" ? post.newsSource || "News" : post.newsSource || "Google News";
+                  const sourceColor = post.source === "reddit" ? "text-[var(--secondary)]" : post.source === "finnhub_news" ? "text-[var(--tertiary)]" : "text-[var(--on-surface-variant)]";
+                  return (
+                    <a key={post.id} href={post.url} target="_blank" rel="noopener"
+                      className="block hover:bg-[var(--surface-bright)] rounded-xl p-3 -mx-3 transition-colors">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${post.sentiment === "bullish" ? "bg-[var(--primary)]" : post.sentiment === "bearish" ? "bg-[var(--secondary)]" : "bg-[var(--outline)]"}`} />
+                        <span className={`font-data text-[9px] uppercase tracking-widest ${sourceColor}`}>{sourceLabel}</span>
+                        <span className="font-data text-[9px] text-[var(--outline)]">{timeAgo(post.created)}</span>
+                        {post.tickers?.slice(0, 3).map((t: string) => (
+                          <span key={t} className="font-data text-[9px] text-[var(--primary-dim)] font-bold">${t}</span>
+                        ))}
+                        {post.score > 0 && <span className="font-data text-[9px] text-[var(--outline)]">{post.score > 999 ? `${(post.score/1000).toFixed(1)}k` : post.score}↑</span>}
+                      </div>
+                      <p className="text-sm leading-snug line-clamp-2">{post.title}</p>
+                    </a>
+                  );
+                })}
+                {posts.length === 0 && (
+                  <div className="text-center py-8">
+                    <div className="h-40 shimmer rounded-xl mb-3" />
+                    <p className="text-xs text-[var(--outline)]">Fetching from Reddit + Finnhub + Google News...</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
