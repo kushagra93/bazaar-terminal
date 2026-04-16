@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime } from "@/lib/session";
-import { useStocks, useEvents, useSentiment, useSignals, useSocial, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
+import { useStocks, useEvents, useSentiment, useSignals, useSocial, useTelegram, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 
 export default function OverviewPage() {
@@ -17,6 +17,7 @@ export default function OverviewPage() {
   const { sentiment } = useSentiment();
   const { signals } = useSignals();
   const { social } = useSocial();
+  const { telegram } = useTelegram();
 
   useEffect(() => {
     const i = setInterval(() => { setSession(getSessionInfo()); setIstTime(getISTTime()); }, 1000);
@@ -536,6 +537,83 @@ export default function OverviewPage() {
           </div>
         </section>
       </div>
+
+      {/* ═══ TELEGRAM INTELLIGENCE ═══ */}
+      {(telegram?.feed?.length > 0) && (
+        <div className="grid grid-cols-12 gap-6">
+          {/* Telegram Sentiment */}
+          <section className="col-span-12 md:col-span-3 bg-[var(--surface-container)] rounded-xl p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-lg">📡</span>
+              <h3 className="font-display font-bold text-sm">Telegram Pulse</h3>
+            </div>
+            {telegram.sentiment ? (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-data text-3xl font-bold text-[var(--primary)]">{telegram.sentiment.bullish_pct}%</span>
+                  <span className="font-data text-xs text-[var(--on-surface-variant)]">Bullish</span>
+                </div>
+                <div className="h-2 bg-[var(--surface-highest)] rounded-full overflow-hidden flex mb-4">
+                  <div className="h-full bg-[var(--primary)]" style={{ width: `${telegram.sentiment.bullish_pct}%` }} />
+                  <div className="h-full bg-[var(--secondary)]" style={{ width: `${telegram.sentiment.bearish_pct}%` }} />
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center font-data text-[10px]">
+                  <div><span className="text-[var(--primary)] font-bold">{telegram.sentiment.bullish}</span><br/><span className="text-[var(--outline)]">Bull</span></div>
+                  <div><span className="text-[var(--on-surface-variant)] font-bold">{telegram.sentiment.neutral}</span><br/><span className="text-[var(--outline)]">Neutral</span></div>
+                  <div><span className="text-[var(--secondary)] font-bold">{telegram.sentiment.bearish}</span><br/><span className="text-[var(--outline)]">Bear</span></div>
+                </div>
+                <p className="font-data text-[9px] text-[var(--outline)] mt-3">{telegram.sentiment.total} messages · last 4h · {Object.keys(CHANNELS_COUNT).length || 15} channels</p>
+              </div>
+            ) : <div className="h-24 shimmer rounded-xl" />}
+          </section>
+
+          {/* Telegram Feed */}
+          <section className="col-span-12 md:col-span-9 bg-[var(--surface-low)] rounded-xl overflow-hidden">
+            <div className="bg-[var(--surface-container)] px-6 py-4 flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📡</span>
+                <h3 className="font-display font-bold">Telegram Intelligence</h3>
+                <span className="font-data text-[10px] text-[var(--primary-dim)] flex items-center gap-1 ml-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> {telegram.feed.length} messages
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {["news", "macro", "liquidations", "whale-alert", "on-chain"].map(cat => (
+                  <span key={cat} className="font-data text-[8px] px-2 py-0.5 rounded-full bg-[var(--surface-highest)] text-[var(--on-surface-variant)] uppercase tracking-wider">{cat}</span>
+                ))}
+              </div>
+            </div>
+            <div className="max-h-[280px] overflow-y-auto">
+              {telegram.feed.slice(0, 12).map((msg: any) => {
+                const catColor = msg.category === "news" ? "var(--tertiary)" : msg.category === "macro" ? "var(--secondary)" : msg.category === "liquidations" ? "var(--squeeze, #f59e0b)" : msg.category === "whale-alert" ? "var(--primary-dim)" : "var(--outline)";
+                return (
+                  <div key={msg.id} className="flex gap-3 px-5 py-3 hover:bg-[var(--surface-container)] transition-colors">
+                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${msg.sentiment === "bullish" ? "bg-[var(--primary)]" : msg.sentiment === "bearish" ? "bg-[var(--secondary)]" : "bg-[var(--outline)]"}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className="font-data text-[9px] uppercase tracking-widest font-bold" style={{ color: catColor }}>@{msg.source}</span>
+                        <span className="font-data text-[8px] px-1.5 py-0.5 rounded" style={{ color: catColor, background: `${catColor}10` }}>{msg.category}</span>
+                        {msg.urgency === "high" && <span className="font-data text-[8px] text-[var(--secondary)] animate-pulse">⚡ URGENT</span>}
+                        {msg.tickers && msg.tickers !== "[]" && (() => {
+                          try { return eval(msg.tickers).map((tk: string) => <span key={tk} className="font-data text-[8px] text-[var(--primary-dim)] font-bold">${tk}</span>); }
+                          catch { return null; }
+                        })()}
+                      </div>
+                      <p className="text-sm leading-snug line-clamp-2 text-[var(--on-surface)]">{msg.text}</p>
+                      <div className="flex items-center gap-3 mt-1 font-data text-[9px] text-[var(--outline)]">
+                        <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        {msg.views > 0 && <span>{msg.views > 999 ? `${(msg.views/1000).toFixed(1)}k` : msg.views} views</span>}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
+
+const CHANNELS_COUNT = {};

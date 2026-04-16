@@ -77,6 +77,20 @@ export const SECTOR_MAP: Record<string, string[]> = {
 
 export const CONTEXT_SYMBOLS = ["SPY", "QQQ"];
 
+/** Live Telegram channel intelligence */
+export function useTelegram(refreshMs = 30_000) {
+  const [data, setData] = useState<any>({ feed: [], sentiment: null, trending: [] });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchJSON("/api/telegram", { feed: [], sentiment: null, trending: [] }).then(d => { setData(d); setLoading(false); });
+    const i = setInterval(() => fetchJSON("/api/telegram", { feed: [], sentiment: null, trending: [] }).then(setData), refreshMs);
+    return () => clearInterval(i);
+  }, [refreshMs]);
+
+  return { telegram: data, loading };
+}
+
 export function getSectorForSymbol(sym: string): string {
   for (const [sector, symbols] of Object.entries(SECTOR_MAP)) {
     if (symbols.includes(sym)) return sector;
