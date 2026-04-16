@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
  * Proxies the local Telegram feed server (port 8000)
  * In production, replace with the deployed Telegram feed URL
  */
-const TG_FEED_URL = process.env.TELEGRAM_FEED_URL || "https://bazaar-telegram-feed.onrender.com";
+const TG_FEED_URL = process.env.TELEGRAM_FEED_URL || "https://bazaar-tg-feed.onrender.com";
 
 let cache: { data: any; ts: number } | null = null;
 

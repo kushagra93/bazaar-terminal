@@ -172,9 +172,6 @@ export function NavBar() {
               <img src="/logo.svg" alt="BAZAAR" width={28} height={28} className="drop-shadow-[0_0_8px_rgba(164,255,185,0.4)]" />
               <span className="font-display text-lg font-bold text-[var(--on-surface)] tracking-[3px]">BAZAAR</span>
             </a>
-            <span className="text-[9px] font-body text-[var(--text-secondary)] uppercase tracking-widest -ml-2 mt-0.5 hidden sm:block">
-              US STOCK PERPS · INDIAN EDGE
-            </span>
             <div className="h-5 w-px bg-[var(--border-dim)] mx-1" />
             <NavLinks />
           </div>
