@@ -1,6 +1,7 @@
 "use client";
 
 import { useCurrency } from "@/lib/currency";
+import { useLanguage } from "@/lib/language";
 import { useSentiment, useSocial } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 
@@ -56,6 +57,7 @@ export default function SentimentPage() {
   const { sentiment, loading: sentLoading } = useSentiment();
   const { social, loading: socLoading } = useSocial();
   const { format } = useCurrency();
+  const { t } = useLanguage();
 
   const fng = sentiment?.fearGreed;
   const analystRatings = sentiment?.analystRatings || [];
@@ -66,8 +68,8 @@ export default function SentimentPage() {
     <div className="max-w-[1400px] mx-auto space-y-10">
       {/* Hero */}
       <div>
-        <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">Sentiment Engine</span>
-        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">SENTIMENT</h1>
+        <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">{t("sentiment.engine")}</span>
+        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">{t("sentiment.title")}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -77,7 +79,7 @@ export default function SentimentPage() {
           {/* Fear & Greed Dial */}
           <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-display font-bold text-lg">Fear & Greed<br/>Dial</h3>
+              <h3 className="font-display font-bold text-lg">{t("sentiment.fear_greed")}</h3>
               {fng && <span className="font-data text-sm uppercase tracking-widest" style={{
                 color: fng.value >= 55 ? "var(--primary)" : fng.value >= 45 ? "var(--tertiary)" : "var(--secondary)"
               }}>{fng.label}</span>}
@@ -89,7 +91,7 @@ export default function SentimentPage() {
           <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-lg">📊</span>
-              <h3 className="font-display font-bold">Market Bias</h3>
+              <h3 className="font-display font-bold">{t("sentiment.market_bias")}</h3>
             </div>
             {trending.length > 0 ? (() => {
               const totalBull = trending.reduce((s: number, t: any) => s + (t.bullish || 0), 0);
@@ -133,7 +135,7 @@ export default function SentimentPage() {
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-3">
                 <span className="text-lg">🌐</span>
-                <h3 className="font-display font-bold">Social Intelligence</h3>
+                <h3 className="font-display font-bold">{t("sentiment.social_intelligence")}</h3>
               </div>
               <span className="font-data text-[10px] text-[var(--primary-dim)] uppercase tracking-widest flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> Live Feed
@@ -142,7 +144,7 @@ export default function SentimentPage() {
 
             {/* Trending Tickers */}
             <div className="mb-6">
-              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-3">Trending Tickers</p>
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-3">{t("sentiment.trending_tickers")}</p>
               <div className="space-y-0">
                 {trending.slice(0, 8).map((t: any) => (
                   <div key={t.symbol} className="flex items-center justify-between py-2.5 hover:bg-[var(--surface-bright)] transition-colors rounded-lg px-2 -mx-2">
@@ -207,7 +209,7 @@ export default function SentimentPage() {
         <div className="lg:col-span-4 space-y-6">
           {/* Analyst Consensus */}
           <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
-            <h3 className="font-display font-bold text-lg mb-6">Top Analysts</h3>
+            <h3 className="font-display font-bold text-lg mb-6">{t("sentiment.top_analysts")}</h3>
             <div className="space-y-4">
               {analystRatings.slice(0, 6).map((r: any) => (
                 <div key={r.symbol} className="hover:bg-[var(--surface-bright)] rounded-xl p-3 -mx-3 transition-colors">
@@ -238,7 +240,7 @@ export default function SentimentPage() {
 
           {/* Sentiment Summary */}
           <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
-            <h3 className="font-display font-bold mb-4">Sentiment Intelligence Summary</h3>
+            <h3 className="font-display font-bold mb-4">{t("sentiment.summary")}</h3>
             <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed mb-4">
               {fng && fng.value >= 55
                 ? `The market is currently exhibiting ${fng.label}. While retail sentiment on Reddit shows signs of optimism, institutional positioning suggests caution. Watch for a "Sentiment Divergence" if social activity continues to climb while prices consolidate.`
@@ -248,8 +250,8 @@ export default function SentimentPage() {
               }
             </p>
             <div className="flex gap-2">
-              <span className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary-dim)] rounded-full font-data text-xs font-bold">{fng && fng.value >= 50 ? "Favor Longs" : "Favor Shorts"}</span>
-              <span className="px-4 py-2 bg-[var(--surface-highest)] text-[var(--on-surface-variant)] rounded-full font-data text-xs font-bold">Low Volatility</span>
+              <span className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary-dim)] rounded-full font-data text-xs font-bold">{fng && fng.value >= 50 ? t("sentiment.favor_longs") : t("sentiment.favor_shorts")}</span>
+              <span className="px-4 py-2 bg-[var(--surface-highest)] text-[var(--on-surface-variant)] rounded-full font-data text-xs font-bold">{t("sentiment.low_volatility")}</span>
             </div>
           </div>
         </div>

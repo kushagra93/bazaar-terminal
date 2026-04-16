@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useCurrency } from "@/lib/currency";
+import { useLanguage } from "@/lib/language";
 import { useEvents, useStocks } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 import { Q2_2026_CALENDAR, CATEGORY_CONFIG, ScheduledEvent } from "@/config/economic-calendar";
@@ -12,6 +13,7 @@ export default function EventsPage() {
   const { events, loading } = useEvents();
   const { stocks } = useStocks(30_000);
   const { format } = useCurrency();
+  const { t } = useLanguage();
   const [tab, setTab] = useState<"all" | "earnings" | "economic">("all");
   const [catFilter, setCatFilter] = useState<string>("all");
 
@@ -62,7 +64,7 @@ export default function EventsPage() {
           </span>
         </div>
         <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter">
-          Macro Events <span className="text-[var(--primary)]">Calendar</span>
+          {t("events.title")} <span className="text-[var(--primary)]">{t("events.calendar")}</span>
         </h1>
       </div>
 

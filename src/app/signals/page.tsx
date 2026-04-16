@@ -22,7 +22,7 @@ function ConfidenceBar({ confidence }: { confidence: number }) {
 export default function SignalsPage() {
   const { signals, loading } = useSignals();
   const { social } = useSocial();
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [typeFilter, setTypeFilter] = useState("all");
 
   const filtered = useMemo(() => {
@@ -43,9 +43,9 @@ export default function SignalsPage() {
             <span className="w-2 h-2 rounded-full bg-[var(--primary-dim)] animate-pulse" /> Live Transmission
           </span>
         </div>
-        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter">MARKET<br className="md:hidden" /> OPEN</h1>
+        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter">{t("signals.title")}</h1>
         <p className="text-[var(--on-surface-variant)] mt-3 max-w-2xl leading-relaxed">
-          Algorithmic scanning across {signals.length > 0 ? signals.length : "..."} assets. Technical patterns and social sentiment consolidated into a unified intelligence feed.
+          {t("signals.algo_scanning")}
         </p>
       </div>
 

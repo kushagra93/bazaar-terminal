@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
+import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime } from "@/lib/session";
 import { useStocks, useEvents, useSentiment, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 
 export default function OverviewPage() {
   const { format } = useCurrency();
+  const { t } = useLanguage();
   const [session, setSession] = useState(getSessionInfo());
   const [istTime, setIstTime] = useState(getISTTime());
   const { stocks, loading, lastUpdated } = useStocks(3_000);
@@ -43,9 +45,9 @@ export default function OverviewPage() {
       {/* ═══ HERO: Giant Session Title ═══ */}
       <div className="flex items-end justify-between">
         <div>
-          <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">Terminal Intelligence</span>
+          <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">{t("overview.terminal_intelligence")}</span>
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter mt-2 text-[var(--on-surface)]">
-            {session.label}
+            {t(`sessions.${session.key}`)}
           </h1>
         </div>
         <div className="hidden md:flex items-center gap-4">
@@ -62,9 +64,9 @@ export default function OverviewPage() {
         {/* ── Market Pulse (8 cols) ── */}
         <section className="col-span-12 lg:col-span-8 bg-[var(--surface-container)] rounded-xl p-6 md:p-8">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="font-display text-lg font-bold">Market Pulse</h2>
+            <h2 className="font-display text-lg font-bold">{t("overview.market_pulse")}</h2>
             <span className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" /> Live Update
+              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" /> {t("overview.live_update")}
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
@@ -117,9 +119,9 @@ export default function OverviewPage() {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="text-[var(--secondary)]">⚡</span>
-              <h2 className="font-display text-lg font-bold">Top Movers</h2>
+              <h2 className="font-display text-lg font-bold">{t("overview.top_movers")}</h2>
             </div>
-            <p className="text-[var(--on-surface-variant)] text-sm mb-6">{session.context}</p>
+            <p className="text-[var(--on-surface-variant)] text-sm mb-6">{t(`session_context.${session.key}`)}</p>
           </div>
           <div className="space-y-0">
             {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 shimmer mb-2 rounded-xl" />) :
@@ -144,7 +146,7 @@ export default function OverviewPage() {
         {/* ── Earnings Today (4 cols) ── */}
         <section className="col-span-12 md:col-span-4 bg-[var(--surface-low)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-display font-bold text-sm">Earnings This Week</h3>
+            <h3 className="font-display font-bold text-sm">{t("overview.earnings_this_week")}</h3>
           </div>
           <div className="space-y-4">
             {earningsEvents.length === 0 ? <p className="text-sm text-[var(--on-surface-variant)]">{loading ? "Loading..." : "No earnings this week"}</p> :
@@ -162,7 +164,7 @@ export default function OverviewPage() {
 
         {/* ── Sector Distribution (4 cols) ── */}
         <section className="col-span-12 md:col-span-4 bg-[var(--surface-container)] rounded-xl p-6">
-          <h3 className="font-display font-bold text-sm mb-4">Sector Distribution</h3>
+          <h3 className="font-display font-bold text-sm mb-4">{t("overview.sector_distribution")}</h3>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {sectors.map(s => {
               const isUp = s.avgChange >= 0;
@@ -182,7 +184,7 @@ export default function OverviewPage() {
         {/* ── Most Volatile hero (4 cols) ── */}
         {mostVolatile && (
           <section className="col-span-12 md:col-span-4 bg-[var(--surface-container)] rounded-xl p-6 relative overflow-hidden">
-            <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-1">Most Volatile</p>
+            <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-1">{t("overview.most_volatile")}</p>
             <div className="flex items-center gap-3 mb-2">
               <StockLogo symbol={mostVolatile.symbol} size={32} />
               <h3 className="font-display text-2xl font-extrabold">{mostVolatile.symbol}</h3>
@@ -199,8 +201,8 @@ export default function OverviewPage() {
         {/* ── Detailed Watchlist (12 cols) ── */}
         <section className="col-span-12 bg-[var(--surface-low)] rounded-xl overflow-hidden">
           <div className="p-6 flex justify-between items-center">
-            <h3 className="font-display font-bold text-lg">Detailed Watchlist</h3>
-            <a href="/markets" className="font-data text-[10px] text-[var(--primary)] uppercase tracking-widest hover:underline">View All ({ranked.length})</a>
+            <h3 className="font-display font-bold text-lg">{t("overview.detailed_watchlist")}</h3>
+            <a href="/markets" className="font-data text-[10px] text-[var(--primary)] uppercase tracking-widest hover:underline">{t("overview.view_all")} ({ranked.length})</a>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">

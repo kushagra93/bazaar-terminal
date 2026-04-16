@@ -5,14 +5,14 @@ import { useCurrency } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime, SessionInfo } from "@/lib/session";
 import { useStocks, CONTEXT_SYMBOLS } from "@/lib/data";
-import { Lang } from "@/config/i18n";
+import { Lang, t as translate } from "@/config/i18n";
 
-const NAV_LINKS = [
-  { href: "/", label: "Overview" },
-  { href: "/markets", label: "Markets" },
-  { href: "/events", label: "Events" },
-  { href: "/signals", label: "Signals" },
-  { href: "/sentiment", label: "Sentiment" },
+const NAV_KEYS = [
+  { href: "/", key: "nav.overview" },
+  { href: "/markets", key: "nav.markets" },
+  { href: "/events", key: "nav.events" },
+  { href: "/signals", key: "nav.signals" },
+  { href: "/sentiment", key: "nav.sentiment" },
 ];
 
 const LANG_OPTIONS: { value: Lang; label: string }[] = [
@@ -23,6 +23,7 @@ const LANG_OPTIONS: { value: Lang; label: string }[] = [
 ];
 
 function SessionPill() {
+  const { lang } = useLanguage();
   const [session, setSession] = useState<SessionInfo>(getSessionInfo());
   const [istTime, setIstTime] = useState(getISTTime());
   const [hovered, setHovered] = useState(false);
@@ -48,7 +49,7 @@ function SessionPill() {
         <span style={{ animation: session.key === "open" ? "pulse-dot 2s ease infinite" : "none" }}>
           {session.icon}
         </span>
-        <span className="font-semibold tracking-wide">{session.label}</span>
+        <span className="font-semibold tracking-wide">{translate(`sessions.${session.key}`, lang)}</span>
         <span className="text-[var(--text-secondary)] font-data">{istTime}</span>
       </div>
       {hovered && (
@@ -100,6 +101,20 @@ function LanguageToggle() {
             lang === opt.value ? "text-[var(--primary)] bg-[var(--surface-highest)]" : "text-[var(--on-surface-variant)]"
           }`}
         >{opt.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function NavLinks() {
+  const { lang } = useLanguage();
+  return (
+    <div className="flex gap-1">
+      {NAV_KEYS.map(link => (
+        <a key={link.href} href={link.href}
+          className="px-3 py-1.5 rounded-lg text-[13px] font-body font-medium uppercase tracking-[0.8px] text-[var(--on-surface-variant)] hover:text-[var(--on-surface)] transition">
+          {translate(link.key, lang)}
+        </a>
       ))}
     </div>
   );
@@ -161,17 +176,7 @@ export function NavBar() {
               US STOCK PERPS · INDIAN EDGE
             </span>
             <div className="h-5 w-px bg-[var(--border-dim)] mx-1" />
-            <div className="flex gap-1">
-              {NAV_LINKS.map(link => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="px-3 py-1.5 rounded-lg text-[13px] font-body font-medium uppercase tracking-[0.8px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition"
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
+            <NavLinks />
           </div>
 
           {/* Right: session + currency + language + clock */}
