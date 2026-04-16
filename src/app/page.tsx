@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime } from "@/lib/session";
-import { useStocks, useEvents, useSentiment, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
+import { useStocks, useEvents, useSentiment, useSignals, useSocial, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 
 export default function OverviewPage() {
@@ -15,6 +15,8 @@ export default function OverviewPage() {
   const { stocks, loading, lastUpdated } = useStocks(3_000);
   const { events } = useEvents();
   const { sentiment } = useSentiment();
+  const { signals } = useSignals();
+  const { social } = useSocial();
 
   useEffect(() => {
     const i = setInterval(() => { setSession(getSessionInfo()); setIstTime(getISTTime()); }, 1000);
@@ -248,6 +250,183 @@ export default function OverviewPage() {
           {!loading && <div className="p-4 bg-[var(--surface-container)]/30 text-center">
             <a href="/markets" className="font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors">View All Watchlist Assets ({ranked.length})</a>
           </div>}
+        </section>
+      </div>
+
+      {/* ═══ SIGNALS + SENTIMENT SECTION ═══ */}
+      <div className="grid grid-cols-12 gap-6">
+
+        {/* ── Active Signals (8 cols) ── */}
+        <section className="col-span-12 lg:col-span-8 bg-[var(--surface-container)] rounded-xl p-6 md:p-8">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="font-display text-lg font-bold">{t("nav.signals")}</h2>
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mt-1">
+                RSI · MACD · EMA Cross · Bollinger · Supertrend
+              </p>
+            </div>
+            <a href="/signals" className="font-data text-[10px] text-[var(--primary)] uppercase tracking-widest hover:underline">{t("common.view_all")} →</a>
+          </div>
+          {signals.length === 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[1,2,3].map(i => <div key={i} className="h-36 shimmer rounded-xl" />)}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {signals.slice(0, 3).map((sig: any) => {
+                const isLong = sig.type === "LONG";
+                const isShort = sig.type === "SHORT";
+                const borderColor = isLong ? "var(--primary)" : isShort ? "var(--secondary)" : "var(--tertiary)";
+                const label = isLong ? t("signals.LONG") : isShort ? t("signals.SHORT") : t("signals.WATCH");
+                return (
+                  <div key={sig.symbol} className="bg-[var(--surface-low)] rounded-xl p-5 relative overflow-hidden"
+                    style={{ borderLeft: `3px solid ${borderColor}` }}>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <StockLogo symbol={sig.symbol} size={28} />
+                      <div>
+                        <p className="font-display font-bold text-base">{sig.symbol}</p>
+                        <p className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-widest">{sig.name}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="font-data text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                        style={{ color: borderColor, background: `${borderColor}12` }}>
+                        {label}
+                      </span>
+                      <span className="font-data text-xs font-bold" style={{ color: borderColor }}>{sig.confidence}%</span>
+                    </div>
+                    <p className="text-xs text-[var(--on-surface-variant)] leading-relaxed line-clamp-2 mb-3">
+                      {sig.reasons?.[0] || "Analyzing patterns..."}
+                    </p>
+                    <div className="h-1 bg-[var(--surface-highest)] rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${sig.confidence}%`, background: borderColor, boxShadow: sig.confidence > 60 ? `0 0 6px ${borderColor}` : "none" }} />
+                    </div>
+                    <div className="flex justify-between mt-2 font-data text-[10px] text-[var(--outline)]">
+                      <span><Price usd={sig.price} /></span>
+                      <span className={`font-bold ${(sig.change1h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
+                        {(sig.change1h || 0) >= 0 ? "+" : ""}{(sig.change1h || 0).toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* ── Fear & Greed + VIX (4 cols) ── */}
+        <section className="col-span-12 lg:col-span-4 space-y-6">
+          {/* Fear & Greed */}
+          <div className="bg-[var(--surface-container)] rounded-xl p-6">
+            <h3 className="font-display font-bold mb-4">{t("sentiment.fear_greed")}</h3>
+            {fng ? (
+              <div className="text-center">
+                <div className="relative inline-block">
+                  <svg viewBox="0 0 120 70" className="w-32 mx-auto">
+                    <defs>
+                      <linearGradient id="fng-arc" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="var(--secondary)" />
+                        <stop offset="50%" stopColor="var(--tertiary)" />
+                        <stop offset="100%" stopColor="var(--primary)" />
+                      </linearGradient>
+                    </defs>
+                    <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="var(--surface-highest)" strokeWidth="8" strokeLinecap="round" />
+                    <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="url(#fng-arc)" strokeWidth="8" strokeLinecap="round" opacity="0.6" />
+                    {(() => {
+                      const angle = Math.PI - (fng.value / 100) * Math.PI;
+                      const nx = 60 + 40 * Math.cos(angle);
+                      const ny = 60 + 40 * Math.sin(angle);
+                      const color = fng.value >= 55 ? "var(--primary)" : fng.value >= 45 ? "var(--tertiary)" : "var(--secondary)";
+                      return <circle cx={nx} cy={ny} r="4" fill={color} />;
+                    })()}
+                  </svg>
+                </div>
+                <div className="mt-2">
+                  <span className={`font-display text-3xl font-black ${fng.value >= 55 ? "text-[var(--primary)]" : fng.value >= 45 ? "text-[var(--tertiary)]" : "text-[var(--secondary)]"}`}>
+                    {fng.value}
+                  </span>
+                  <p className="font-data text-xs text-[var(--on-surface-variant)] mt-1">{fng.label}</p>
+                </div>
+              </div>
+            ) : <div className="h-24 shimmer rounded-xl" />}
+          </div>
+
+          {/* VIX */}
+          {fng?.vix && (
+            <div className="bg-[var(--surface-container)] rounded-xl p-6">
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-1">VIX</p>
+              <span className={`font-data text-2xl font-bold ${fng.vix < 20 ? "text-[var(--primary)]" : fng.vix < 30 ? "text-[var(--tertiary)]" : "text-[var(--secondary)]"}`}>{fng.vix}</span>
+              <p className="text-xs text-[var(--on-surface-variant)] mt-1">
+                {fng.vix < 16 ? "Low vol — trending" : fng.vix < 20 ? "Moderate — normal" : fng.vix < 30 ? "Elevated — caution" : "High fear"}
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* ═══ SOCIAL INTELLIGENCE ═══ */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Trending Tickers */}
+        <section className="col-span-12 md:col-span-4 bg-[var(--surface-container)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold">{t("sentiment.trending_tickers")}</h3>
+            <span className="font-data text-[10px] text-[var(--primary-dim)] uppercase tracking-widest flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> {t("overview.live_update")}
+            </span>
+          </div>
+          {(social?.trending || []).length === 0 ? (
+            <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-8 shimmer rounded-lg" />)}</div>
+          ) : (social?.trending || []).slice(0, 6).map((tk: any) => (
+            <div key={tk.symbol} className="flex items-center justify-between py-2.5 hover:bg-[var(--surface-bright)] rounded-lg px-2 -mx-2 transition-colors">
+              <div className="flex items-center gap-2.5">
+                <StockLogo symbol={tk.symbol} size={20} />
+                <span className="font-data text-sm font-bold">${tk.symbol}</span>
+                <span className="font-data text-[10px] text-[var(--on-surface-variant)]">{tk.mentions} mentions</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {tk.bullish > 0 && <span className="font-data text-[10px] text-[var(--primary)]">{tk.bullish}↑</span>}
+                {tk.bearish > 0 && <span className="font-data text-[10px] text-[var(--secondary)]">{tk.bearish}↓</span>}
+              </div>
+            </div>
+          ))}
+          <a href="/sentiment" className="block mt-3 font-data text-[10px] text-[var(--primary)] uppercase tracking-widest hover:underline">{t("common.view_all")} →</a>
+        </section>
+
+        {/* Social Feed */}
+        <section className="col-span-12 md:col-span-8 bg-[var(--surface-low)] rounded-xl overflow-hidden">
+          <div className="bg-[var(--surface-container)] px-6 py-4 flex justify-between items-center">
+            <h3 className="font-display font-bold">{t("sentiment.social_intelligence")}</h3>
+            <div className="flex gap-2">
+              {social?.sourceBreakdown && (
+                <>
+                  <span className="font-data text-[8px] px-2 py-0.5 rounded-full bg-[var(--surface-highest)] text-[var(--on-surface-variant)]">Reddit {social.sourceBreakdown.reddit}</span>
+                  <span className="font-data text-[8px] px-2 py-0.5 rounded-full bg-[var(--surface-highest)] text-[var(--on-surface-variant)]">News {(social.sourceBreakdown.finnhub_news || 0) + (social.sourceBreakdown.google_news || 0)}</span>
+                </>
+              )}
+            </div>
+          </div>
+          <div className="p-4 max-h-[300px] overflow-y-auto space-y-1">
+            {(social?.posts || []).length === 0 ? (
+              <div className="space-y-3 p-4">{[1,2,3,4].map(i => <div key={i} className="h-10 shimmer rounded-lg" />)}</div>
+            ) : (social?.posts || []).slice(0, 8).map((post: any) => {
+              const sourceLabel = post.source === "reddit" ? `r/${post.subreddit}` : post.newsSource || "News";
+              return (
+                <a key={post.id} href={post.url} target="_blank" rel="noopener"
+                  className="flex items-center gap-3 py-2.5 px-3 hover:bg-[var(--surface-container)] rounded-xl transition-colors">
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${post.sentiment === "bullish" ? "bg-[var(--primary)]" : post.sentiment === "bearish" ? "bg-[var(--secondary)]" : "bg-[var(--outline)]"}`} />
+                  <span className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-widest w-24 flex-shrink-0 truncate">{sourceLabel}</span>
+                  <span className="text-sm flex-1 truncate">{post.title}</span>
+                  {post.tickers?.slice(0, 2).map((tk: string) => (
+                    <span key={tk} className="font-data text-[9px] text-[var(--primary-dim)] font-bold flex-shrink-0">${tk}</span>
+                  ))}
+                  {post.score > 0 && <span className="font-data text-[9px] text-[var(--outline)] flex-shrink-0">{post.score > 999 ? `${(post.score/1000).toFixed(1)}k` : post.score}↑</span>}
+                </a>
+              );
+            })}
+          </div>
+          <div className="p-3 bg-[var(--surface-container)]/30 text-center">
+            <a href="/sentiment" className="font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors">{t("common.view_all")} {t("sentiment.social_intelligence")} →</a>
+          </div>
         </section>
       </div>
     </div>
