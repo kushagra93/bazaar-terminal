@@ -14,6 +14,10 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "BAZAAR — US Stock Perps Intelligence",
   description: "Real-time US stock perpetual futures intelligence for Indian traders. Track TSLA, NVDA, AAPL perps with INR pricing.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
+  },
   openGraph: {
     title: "BAZAAR — US Stock Perps Intelligence",
     description: "The modern bazaar for Indian traders. US stock perps, INR-first, real-time signals.",
@@ -33,8 +37,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {/* Mobile top bar — shown on mobile only */}
           <div className="md:hidden sticky top-0 z-50 glass px-4 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-[var(--bazaar-gold)] text-base">▣</span>
-              <span className="font-display text-sm font-bold text-[var(--text-primary)] tracking-[2px]">BAZAAR</span>
+              <img src="/logo.svg" alt="BAZAAR" width={22} height={22} className="drop-shadow-[0_0_6px_rgba(164,255,185,0.4)]" />
+              <span className="font-display text-sm font-bold text-[var(--on-surface)] tracking-[2px]">BAZAAR</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="relative flex h-1.5 w-1.5">

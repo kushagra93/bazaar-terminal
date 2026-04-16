@@ -168,9 +168,9 @@ export function NavBar() {
         <div className="max-w-[1440px] mx-auto h-full flex items-center justify-between">
           {/* Left: logo + links */}
           <div className="flex items-center gap-4">
-            <a href="/" className="flex items-center gap-2">
-              <span className="text-[var(--bazaar-gold)] text-lg">▣</span>
-              <span className="font-display text-lg font-bold text-[var(--text-primary)] tracking-[3px]">BAZAAR</span>
+            <a href="/" className="flex items-center gap-2.5">
+              <img src="/logo.svg" alt="BAZAAR" width={28} height={28} className="drop-shadow-[0_0_8px_rgba(164,255,185,0.4)]" />
+              <span className="font-display text-lg font-bold text-[var(--on-surface)] tracking-[3px]">BAZAAR</span>
             </a>
             <span className="text-[9px] font-body text-[var(--text-secondary)] uppercase tracking-widest -ml-2 mt-0.5 hidden sm:block">
               US STOCK PERPS · INDIAN EDGE
