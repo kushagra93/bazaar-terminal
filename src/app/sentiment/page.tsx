@@ -1,31 +1,45 @@
 "use client";
 
-import { useMemo } from "react";
 import { useCurrency } from "@/lib/currency";
-import { StockLogo } from "@/components/StockLogo";
 import { useSentiment, useSocial } from "@/lib/data";
-import { MessageSquare, TrendingUp, TrendingDown, ArrowUp, ExternalLink } from "lucide-react";
+import { StockLogo } from "@/components/StockLogo";
 
-function FearGreedGauge({ score, label }: { score: number; label: string }) {
-  // Arc goes from left (10,100) = fear to right (190,100) = greed
-  // Score 0 → needle points left (180°), Score 100 → points right (0°)
+function FearGreedDial({ score, label }: { score: number; label: string }) {
   const angle = 180 - (score / 100) * 180;
-  const color = score >= 75 ? "var(--bull)" : score >= 55 ? "var(--bazaar-gold)" : score >= 45 ? "var(--squeeze)" : score >= 25 ? "var(--squeeze)" : "var(--bear)";
+  const color = score >= 75 ? "var(--primary)" : score >= 55 ? "var(--primary-dim)" : score >= 45 ? "var(--tertiary)" : score >= 25 ? "var(--secondary)" : "var(--secondary)";
   return (
-    <div className="text-center">
-      <svg viewBox="0 0 200 110" className="w-48 mx-auto">
-        <path d="M 10 100 A 90 90 0 0 1 55 25" fill="none" stroke="var(--bear)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
-        <path d="M 55 25 A 90 90 0 0 1 100 10" fill="none" stroke="var(--squeeze)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
-        <path d="M 100 10 A 90 90 0 0 1 145 25" fill="none" stroke="var(--bazaar-gold)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
-        <path d="M 145 25 A 90 90 0 0 1 190 100" fill="none" stroke="var(--bull)" strokeWidth="12" strokeLinecap="round" opacity="0.5" />
-        <line x1="100" y1="100"
-          x2={100 + 70 * Math.cos((angle * Math.PI) / 180)}
-          y2={100 + 70 * Math.sin((angle * Math.PI) / 180)}
-          stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="100" cy="100" r="5" fill={color} />
-      </svg>
-      <div className="font-display text-4xl font-bold mt-2" style={{ color }}>{score}</div>
-      <div className="font-body text-sm text-[var(--text-secondary)] mt-1">{label}</div>
+    <div className="flex flex-col items-center">
+      <div className="relative">
+        <svg viewBox="0 0 200 110" className="w-56">
+          <defs>
+            <linearGradient id="gauge-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="var(--secondary)" />
+              <stop offset="30%" stopColor="var(--secondary)" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="var(--tertiary)" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="var(--primary-dim)" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="var(--primary)" />
+            </linearGradient>
+          </defs>
+          <path d="M 15 100 A 85 85 0 0 1 185 100" fill="none" stroke="var(--surface-highest)" strokeWidth="14" strokeLinecap="round" />
+          <path d="M 15 100 A 85 85 0 0 1 185 100" fill="none" stroke="url(#gauge-grad)" strokeWidth="14" strokeLinecap="round" opacity="0.7" />
+          <line
+            x1="100" y1="100"
+            x2={100 + 65 * Math.cos((angle * Math.PI) / 180)}
+            y2={100 + 65 * Math.sin((angle * Math.PI) / 180)}
+            stroke={color} strokeWidth="3" strokeLinecap="round"
+          />
+          <circle cx="100" cy="100" r="6" fill={color} />
+          <circle cx="100" cy="100" r="3" fill="var(--surface)" />
+        </svg>
+        <div className="absolute bottom-0 left-0 right-0 text-center">
+          <span className="font-display text-4xl font-black" style={{ color }}>{score}</span>
+        </div>
+      </div>
+      <div className="flex justify-between w-56 mt-2 font-data text-[9px] uppercase tracking-widest text-[var(--outline)]">
+        <span>Extreme Fear</span>
+        <span>Neutral</span>
+        <span>Extreme Greed</span>
+      </div>
     </div>
   );
 }
@@ -36,53 +50,6 @@ function timeAgo(ts: number): string {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
-}
-
-function RedditPost({ post }: { post: any }) {
-  const sentColor = post.sentiment === "bullish" ? "var(--bull)" : post.sentiment === "bearish" ? "var(--bear)" : "var(--neutral)";
-  const subColors: Record<string, string> = {
-    wallstreetbets: "text-amber-400 bg-amber-400/10",
-    stocks: "text-blue-400 bg-blue-400/10",
-    options: "text-purple-400 bg-purple-400/10",
-  };
-
-  return (
-    <div className="py-3 border-b border-[var(--border-dim)] last:border-0 group">
-      <div className="flex items-start gap-3">
-        {/* Score */}
-        <div className="flex flex-col items-center gap-0.5 w-10 flex-shrink-0">
-          <ArrowUp size={12} className="text-[var(--text-dim)]" />
-          <span className="font-data text-xs font-semibold text-[var(--text-primary)]">{post.score > 999 ? `${(post.score/1000).toFixed(1)}k` : post.score}</span>
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {/* Tags */}
-          <div className="flex items-center gap-1.5 mb-1">
-            <span className={`text-[8px] font-body font-semibold uppercase px-1.5 py-0.5 rounded ${subColors[post.subreddit] || "text-[var(--text-secondary)]"}`}>
-              r/{post.subreddit}
-            </span>
-            {post.flair && <span className="text-[8px] font-body px-1.5 py-0.5 rounded bg-[var(--bg-elevated)] text-[var(--text-secondary)]">{post.flair}</span>}
-            {post.tickers.map((t: string) => (
-              <span key={t} className="text-[8px] font-data font-bold px-1 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)]">${t}</span>
-            ))}
-            <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: sentColor }} />
-          </div>
-
-          {/* Title */}
-          <a href={post.url} target="_blank" rel="noopener" className="font-body text-sm text-[var(--text-primary)] group-hover:text-[var(--bazaar-gold)] transition line-clamp-2">
-            {post.title}
-          </a>
-
-          {/* Meta */}
-          <div className="flex items-center gap-3 mt-1 text-[10px] font-data text-[var(--text-dim)]">
-            <span>u/{post.author}</span>
-            <span>{post.numComments} comments</span>
-            <span>{timeAgo(post.created)}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function SentimentPage() {
@@ -96,115 +63,176 @@ export default function SentimentPage() {
   const trending = social?.trending || [];
 
   return (
-    <div className="max-w-[1440px] mx-auto space-y-5">
+    <div className="max-w-[1400px] mx-auto space-y-10">
+      {/* Hero */}
       <div>
-        <h1 className="font-display text-2xl font-bold">Sentiment</h1>
-        <p className="text-xs font-body text-[var(--text-secondary)] mt-0.5">
-          Live from Reddit r/wallstreetbets · r/stocks · r/options + Fear & Greed Index + Analyst Ratings
-        </p>
+        <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">Sentiment Engine</span>
+        <h1 className="font-display text-4xl md:text-5xl font-extrabold tracking-tighter mt-2">SENTIMENT</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Column 1: Market Sentiment */}
-        <div className="space-y-4">
-          {fng && (
-            <div className="card p-5">
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-1">Fear & Greed Index</div>
-              <div className="text-[9px] font-data text-[var(--text-dim)] mb-4">{fng.source || "US Stock Market"}</div>
-              <FearGreedGauge score={fng.value} label={fng.label} />
-              {fng.vix && (
-                <div className="mt-4 bg-[var(--bg-base)] rounded-lg p-3 text-center">
-                  <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">VIX (Volatility Index)</div>
-                  <div className="font-data text-xl font-bold mt-1" style={{
-                    color: fng.vix < 16 ? "var(--bull)" : fng.vix < 25 ? "var(--bazaar-gold)" : "var(--bear)"
-                  }}>{fng.vix}</div>
-                  <div className="text-[10px] font-body text-[var(--text-secondary)] mt-0.5">
-                    {fng.vix < 16 ? "Low volatility — trending market" : fng.vix < 20 ? "Moderate — normal conditions" : fng.vix < 30 ? "Elevated — trade smaller" : "High fear — extreme caution"}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* Trending tickers on Reddit */}
-          <div className="card p-4">
-            <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-3">
-              Trending on Reddit
+        {/* ── Column 1: Fear & Greed + Market Bias (4 cols) ── */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Fear & Greed Dial */}
+          <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="font-display font-bold text-lg">Fear & Greed<br/>Dial</h3>
+              {fng && <span className="font-data text-sm uppercase tracking-widest" style={{
+                color: fng.value >= 55 ? "var(--primary)" : fng.value >= 45 ? "var(--tertiary)" : "var(--secondary)"
+              }}>{fng.label}</span>}
             </div>
-            {trending.length === 0 ? (
-              <div className="text-xs text-[var(--text-dim)] py-3 text-center">Loading...</div>
-            ) : trending.slice(0, 10).map((t: any) => (
-              <div key={t.symbol} className="flex items-center justify-between py-2 border-b border-[var(--border-dim)] last:border-0">
-                <div className="flex items-center gap-2">
-                  <StockLogo symbol={t.symbol} size={20} />
-                  <span className="font-data text-sm font-bold text-[var(--bazaar-gold)]">${t.symbol}</span>
-                  <span className="font-data text-[10px] text-[var(--text-dim)]">{t.mentions} mentions</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-data text-[10px] text-[var(--bull)]">{t.bullish}🟢</span>
-                  <span className="font-data text-[10px] text-[var(--bear)]">{t.bearish}🔴</span>
-                  <div className="w-12 h-1.5 rounded-full overflow-hidden bg-[var(--bg-base)] flex">
-                    <div className="bg-[var(--bull)]" style={{ width: `${t.mentions > 0 ? (t.bullish / t.mentions) * 100 : 50}%` }} />
-                    <div className="bg-[var(--bear)]" style={{ width: `${t.mentions > 0 ? (t.bearish / t.mentions) * 100 : 50}%` }} />
-                  </div>
-                </div>
-              </div>
-            ))}
+            {fng ? <FearGreedDial score={fng.value} label={fng.label} /> : <div className="h-40 shimmer rounded-xl" />}
           </div>
 
-          {/* Analyst Ratings */}
-          {analystRatings.length > 0 && (
-            <div className="card p-4">
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider mb-3">Analyst Consensus (Finnhub)</div>
-              {analystRatings.map((r: any) => (
-                <div key={r.symbol} className="py-2 border-b border-[var(--border-dim)] last:border-0">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <StockLogo symbol={r.symbol} size={18} />
-                      <span className="font-body text-sm font-semibold">{r.symbol}</span>
-                    </div>
-                    <span className="font-data text-[10px] text-[var(--text-dim)]">{r.period}</span>
+          {/* Market Bias */}
+          <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-lg">📊</span>
+              <h3 className="font-display font-bold">Market Bias</h3>
+            </div>
+            {trending.length > 0 ? (() => {
+              const totalBull = trending.reduce((s: number, t: any) => s + (t.bullish || 0), 0);
+              const totalBear = trending.reduce((s: number, t: any) => s + (t.bearish || 0), 0);
+              const total = totalBull + totalBear || 1;
+              const bullPct = ((totalBull / total) * 100).toFixed(1);
+              return (
+                <div>
+                  <div className="flex items-baseline gap-2 mb-4">
+                    <span className="font-data text-3xl font-bold text-[var(--primary)]">{bullPct}%</span>
+                    <span className="font-data text-xs text-[var(--on-surface-variant)] uppercase tracking-widest">Bullish</span>
                   </div>
-                  <div className="flex h-2 rounded-full overflow-hidden">
-                    <div className="bg-[var(--bull)]" style={{ width: `${r.bullPct}%` }} />
-                    <div className="bg-[var(--neutral)]" style={{ width: `${r.holdPct}%` }} />
-                    <div className="bg-[var(--bear)]" style={{ width: `${r.bearPct}%` }} />
+                  <div className="h-2 bg-[var(--surface-highest)] rounded-full overflow-hidden flex mb-4">
+                    <div className="h-full bg-[var(--primary)]" style={{ width: `${bullPct}%` }} />
+                    <div className="h-full bg-[var(--secondary)]" style={{ width: `${100 - parseFloat(bullPct)}%` }} />
                   </div>
-                  <div className="flex justify-between mt-0.5 text-[9px] font-data text-[var(--text-dim)]">
-                    <span className="text-[var(--bull)]">Buy {r.bullPct}%</span>
-                    <span>Hold {r.holdPct}%</span>
-                    <span className="text-[var(--bear)]">Sell {r.bearPct}%</span>
-                  </div>
+                  <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed">
+                    The aggregate bias remains {parseFloat(bullPct) > 55 ? "bullish" : parseFloat(bullPct) < 45 ? "bearish" : "neutral"},
+                    based on {social?.totalPosts || 0} posts across Reddit communities.
+                  </p>
                 </div>
-              ))}
+              );
+            })() : <div className="h-20 shimmer rounded-xl" />}
+          </div>
+
+          {/* VIX */}
+          {fng?.vix && (
+            <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-2">VIX Volatility Index</p>
+              <span className={`font-data text-3xl font-bold ${fng.vix < 20 ? "text-[var(--primary)]" : fng.vix < 30 ? "text-[var(--tertiary)]" : "text-[var(--secondary)]"}`}>{fng.vix}</span>
+              <p className="text-sm text-[var(--on-surface-variant)] mt-2">
+                {fng.vix < 16 ? "Low volatility — trending market conditions" : fng.vix < 20 ? "Moderate — normal trading conditions" : fng.vix < 30 ? "Elevated — trade smaller, wider stops" : "High fear — extreme caution advised"}
+              </p>
             </div>
           )}
         </div>
 
-        {/* Column 2-3: Reddit Feed */}
-        <div className="lg:col-span-2">
-          <div className="card p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-[11px] font-body text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-2">
-                <MessageSquare size={12} className="text-orange-400" />
-                Live Reddit Feed
-                <span className="font-data text-[10px] text-[var(--text-dim)]">
-                  {posts.length} posts from r/wallstreetbets · r/stocks · r/options
-                </span>
+        {/* ── Column 2: Social Intelligence (4 cols) ── */}
+        <div className="lg:col-span-4 space-y-6">
+          <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🌐</span>
+                <h3 className="font-display font-bold">Social Intelligence</h3>
+              </div>
+              <span className="font-data text-[10px] text-[var(--primary-dim)] uppercase tracking-widest flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> Live Feed
+              </span>
+            </div>
+
+            {/* Trending Tickers */}
+            <div className="mb-6">
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-3">Trending Tickers</p>
+              <div className="space-y-0">
+                {trending.slice(0, 8).map((t: any) => (
+                  <div key={t.symbol} className="flex items-center justify-between py-2.5 hover:bg-[var(--surface-bright)] transition-colors rounded-lg px-2 -mx-2">
+                    <div className="flex items-center gap-2.5">
+                      <StockLogo symbol={t.symbol} size={20} />
+                      <span className="font-data text-sm font-bold">${t.symbol}</span>
+                      <span className="font-data text-[10px] text-[var(--on-surface-variant)]">{t.mentions} mentions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {t.bullish > 0 && <span className="font-data text-[10px] text-[var(--primary)]">{t.bullish}↑</span>}
+                      {t.bearish > 0 && <span className="font-data text-[10px] text-[var(--secondary)]">{t.bearish}↓</span>}
+                    </div>
+                  </div>
+                ))}
+                {trending.length === 0 && <div className="h-32 shimmer rounded-xl" />}
               </div>
             </div>
 
-            {socLoading ? (
-              <div className="space-y-3">{Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-16 rounded shimmer" />)}</div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-12 text-[var(--text-secondary)] font-body text-sm">
-                Unable to fetch Reddit data — Reddit may be rate-limiting
+            {/* Reddit Posts */}
+            <div>
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-3">Reddit Feed</p>
+              <div className="space-y-3">
+                {posts.slice(0, 6).map((post: any) => (
+                  <a key={post.id} href={post.url} target="_blank" rel="noopener"
+                    className="block hover:bg-[var(--surface-bright)] rounded-xl p-3 -mx-3 transition-colors">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${post.sentiment === "bullish" ? "bg-[var(--primary)]" : post.sentiment === "bearish" ? "bg-[var(--secondary)]" : "bg-[var(--outline)]"}`} />
+                      <span className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-widest">r/{post.subreddit}</span>
+                      <span className="font-data text-[9px] text-[var(--outline)]">{timeAgo(post.created)}</span>
+                      {post.tickers?.map((t: string) => (
+                        <span key={t} className="font-data text-[9px] text-[var(--primary-dim)] font-bold">${t}</span>
+                      ))}
+                    </div>
+                    <p className="text-sm leading-snug line-clamp-2">{post.title}</p>
+                  </a>
+                ))}
+                {posts.length === 0 && <div className="h-40 shimmer rounded-xl" />}
               </div>
-            ) : (
-              <div className="max-h-[700px] overflow-y-auto">
-                {posts.map((post: any) => <RedditPost key={post.id} post={post} />)}
-              </div>
-            )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Column 3: Analyst Consensus + Summary (4 cols) ── */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Analyst Consensus */}
+          <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+            <h3 className="font-display font-bold text-lg mb-6">Top Analysts</h3>
+            <div className="space-y-4">
+              {analystRatings.slice(0, 6).map((r: any) => (
+                <div key={r.symbol} className="hover:bg-[var(--surface-bright)] rounded-xl p-3 -mx-3 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <StockLogo symbol={r.symbol} size={20} />
+                      <span className="font-display font-bold text-sm">{r.symbol}</span>
+                    </div>
+                    <span className={`font-data text-xs font-bold ${r.bullPct > 60 ? "text-[var(--primary)]" : r.bullPct < 40 ? "text-[var(--secondary)]" : "text-[var(--tertiary)]"}`}>
+                      {r.bullPct > 60 ? "BULLISH" : r.bullPct < 40 ? "BEARISH" : "MIXED"}
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-[var(--surface-highest)] rounded-full overflow-hidden flex">
+                    <div className="h-full bg-[var(--primary)]" style={{ width: `${r.bullPct}%` }} />
+                    <div className="h-full bg-[var(--outline)]" style={{ width: `${r.holdPct}%` }} />
+                    <div className="h-full bg-[var(--secondary)]" style={{ width: `${r.bearPct}%` }} />
+                  </div>
+                  <div className="flex justify-between mt-1 font-data text-[9px] text-[var(--outline)]">
+                    <span>Buy {r.bullPct}%</span>
+                    <span>Hold {r.holdPct}%</span>
+                    <span>Sell {r.bearPct}%</span>
+                  </div>
+                </div>
+              ))}
+              {analystRatings.length === 0 && <div className="h-40 shimmer rounded-xl" />}
+            </div>
+          </div>
+
+          {/* Sentiment Summary */}
+          <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
+            <h3 className="font-display font-bold mb-4">Sentiment Intelligence Summary</h3>
+            <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed mb-4">
+              {fng && fng.value >= 55
+                ? `The market is currently exhibiting ${fng.label}. While retail sentiment on Reddit shows signs of optimism, institutional positioning suggests caution. Watch for a "Sentiment Divergence" if social activity continues to climb while prices consolidate.`
+                : fng && fng.value < 45
+                ? `Fear is elevated with the index at ${fng.value}. Reddit discussions are dominated by defensive positioning. This historically signals potential buying opportunities for contrarian traders, but wait for VIX to peak before going long.`
+                : `Neutral sentiment territory. The market is balanced between bulls and bears. Key upcoming events (FOMC, earnings) will likely determine the next directional move. Position sizing should remain conservative.`
+              }
+            </p>
+            <div className="flex gap-2">
+              <span className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary-dim)] rounded-full font-data text-xs font-bold">{fng && fng.value >= 50 ? "Favor Longs" : "Favor Shorts"}</span>
+              <span className="px-4 py-2 bg-[var(--surface-highest)] text-[var(--on-surface-variant)] rounded-full font-data text-xs font-bold">Low Volatility</span>
+            </div>
           </div>
         </div>
       </div>
