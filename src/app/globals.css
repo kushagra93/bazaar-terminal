@@ -1,118 +1,123 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=IBM+Plex+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════
+   BAZAAR × Stitch Design System
+   "The Neon Luminary" — Dynamic Editorialism
+   ═══════════════════════════════════════════ */
+
 :root {
-  /* Backgrounds */
-  --bg-base: #07080b;
-  --bg-surface: #0d0f14;
-  --bg-elevated: #141720;
-  --bg-overlay: rgba(13,15,20,0.95);
+  /* ── Foundation ── */
+  --bg: #0c0e12;
+  --surface: #0c0e12;
+  --surface-dim: #0c0e12;
+  --surface-low: #111318;
+  --surface-container: #171a1f;
+  --surface-high: #1d2025;
+  --surface-highest: #23262c;
+  --surface-bright: #292c32;
+  --surface-variant: #23262c;
 
-  /* Borders */
-  --border-dim: rgba(255,255,255,0.06);    /* slightly more visible */
-  --border-subtle: rgba(255,255,255,0.10);
-  --border-default: rgba(255,255,255,0.14);
-  --border-active: rgba(255,255,255,0.24);
+  /* ── Signals ── */
+  --primary: #a4ffb9;          /* Mint neon — gains, active */
+  --primary-dim: #00ed7e;      /* Deeper green for accents */
+  --secondary: #ff7350;        /* Electric coral — losses, alerts */
+  --secondary-dim: #dc3300;
+  --tertiary: #6e9bff;         /* Atmospheric blue — info, links */
+  --tertiary-dim: #0f6df3;
+  --error: #ff716c;
 
-  /* Brand — Bazaar Spice Palette */
+  /* ── Brand ── */
   --bazaar-gold: #e8a045;
   --bazaar-gold-dim: rgba(232,160,69,0.12);
-  --bazaar-amber: #d4750a;
-  --bazaar-cream: #f5e6c8;
 
-  /* Market Semantics */
-  --bull: #22c55e;
-  --bull-dim: rgba(34,197,94,0.10);
-  --bear: #ef4444;
-  --bear-dim: rgba(239,68,68,0.10);
-  --neutral: #6b7280;
+  /* ── Text ── */
+  --on-surface: #f6f6fc;
+  --on-surface-variant: #aaabb0;
+  --on-bg: #f6f6fc;
+  --text-dim: #74757a;
+  --outline: #74757a;
+  --outline-variant: #46484d;
+
+  /* ── Semantic ── */
+  --bull: #a4ffb9;
+  --bull-dim: rgba(164,255,185,0.08);
+  --bear: #ff7350;
+  --bear-dim: rgba(255,115,80,0.08);
   --squeeze: #f59e0b;
-  --squeeze-dim: rgba(245,158,11,0.12);
+  --squeeze-dim: rgba(245,158,11,0.10);
+  --neutral: #6b7280;
 
-  /* Sessions */
+  /* ── Sessions ── */
   --session-premarket: #f59e0b;
-  --session-open: #22c55e;
-  --session-afterhours: #8b5cf6;
-  --session-overnight: #374151;
+  --session-open: #a4ffb9;
+  --session-afterhours: #6e9bff;
+  --session-overnight: #46484d;
 
-  /* Events */
-  --event-earnings: #818cf8;
-  --event-fed: #f97316;
-  --event-split: #06b6d4;
+  /* ── Events ── */
+  --event-earnings: #6e9bff;
+  --event-fed: #ff7350;
+  --event-data: #a4ffb9;
 
-  /* INR */
-  --inr: #e8a045;
-
-  /* Text */
-  --text-primary: #e2e8f0;
-  --text-secondary: #8b9ab5;  /* brightened from #64748b — more legible on dark bg */
-  --text-dim: #4a5a72;        /* brightened from #2d3748 — no longer invisible */
-  --text-data: #e2e8f0;
-
-  /* Sectors */
-  --sector-tech: #6366f1;
-  --sector-ev: #10b981;
-  --sector-fintech: #14b8a6;
-  --sector-meme: #f43f5e;
-  --sector-growth: #8b5cf6;
+  /* ── Sectors ── */
+  --sector-tech: #6e9bff;
+  --sector-ev: #a4ffb9;
+  --sector-fintech: #00ed7e;
+  --sector-meme: #ff7350;
+  --sector-growth: #6e9bff;
 }
 
-/* ── Base ───────────────────────────── */
+/* ── Base ── */
 body {
-  background: var(--bg-base);
-  color: var(--text-primary);
-  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--on-surface);
+  font-family: 'Inter', system-ui, sans-serif;
 }
 body::before {
   content: '';
   position: fixed; inset: 0;
   pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 900px 500px at 15% 10%, rgba(232,160,69,0.04) 0%, transparent 65%),
-    radial-gradient(ellipse 700px 600px at 85% 90%, rgba(99,102,241,0.04) 0%, transparent 65%),
-    radial-gradient(ellipse 500px 400px at 50% 50%, rgba(239,68,68,0.02) 0%, transparent 60%);
+    radial-gradient(ellipse 800px 500px at 20% 10%, rgba(164,255,185,0.02) 0%, transparent 65%),
+    radial-gradient(ellipse 600px 500px at 80% 85%, rgba(110,155,255,0.02) 0%, transparent 65%);
 }
 
-/* ── Typography classes ─────────────── */
-.font-display { font-family: 'Playfair Display', Georgia, serif; }
-.font-data    { font-family: 'IBM Plex Mono', 'Menlo', monospace; }
-.font-body    { font-family: 'DM Sans', system-ui, sans-serif; }
+/* ── Font classes ── */
+.font-display  { font-family: 'Manrope', system-ui, sans-serif; }
+.font-data     { font-family: 'Space Grotesk', 'IBM Plex Mono', monospace; }
+.font-body     { font-family: 'Inter', system-ui, sans-serif; }
 
-/* ── Card system ────────────────────── */
+/* ── Cards: NO borders, tonal layering ── */
 .card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-dim);
-  border-radius: 10px;
-  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+  background: var(--surface-container);
+  border-radius: 1rem;
+  border: none;
+  transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
 }
 .card:hover {
-  border-color: var(--border-subtle);
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--border-dim) inset;
+  background: var(--surface-high);
+  box-shadow: 0 8px 32px rgba(246,246,252,0.04);
   transform: translateY(-1px);
 }
-.card--bull { border-left: 3px solid var(--bull); }
-.card--bear { border-left: 3px solid var(--bear); }
-.card--earnings { border-left: 3px solid var(--event-earnings); }
-.card--fed { border-left: 3px solid var(--event-fed); }
+.card--bull { border-left: 3px solid var(--primary); }
+.card--bear { border-left: 3px solid var(--secondary); }
+.card--earnings { border-left: 3px solid var(--tertiary); }
+.card--fed { border-left: 3px solid var(--secondary); }
 .card--squeeze {
   border-left: 3px solid var(--squeeze);
-  box-shadow: 0 0 0 1px rgba(245,158,11,0.1) inset;
   animation: squeeze-pulse 2s ease-in-out infinite;
 }
 
-/* ── Animations ─────────────────────── */
-@keyframes flash-bull {
-  0% { background: transparent; color: var(--text-data); }
-  25% { background: var(--bull-dim); color: var(--bull); }
-  100% { background: transparent; color: var(--text-data); }
+/* ── Glass effect (nav, floating) ── */
+.glass {
+  background: rgba(23,26,31,0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
-@keyframes flash-bear {
-  0% { background: transparent; color: var(--text-data); }
-  25% { background: var(--bear-dim); color: var(--bear); }
-  100% { background: transparent; color: var(--text-data); }
-}
+
+/* ── Animations ── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -125,33 +130,38 @@ body::before {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
 @keyframes squeeze-pulse {
-  0%,100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.1) inset; }
-  50% { box-shadow: 0 0 24px 2px rgba(245,158,11,0.12), 0 0 0 1px rgba(245,158,11,0.2) inset; }
+  0%,100% { box-shadow: none; }
+  50% { box-shadow: 0 0 20px 2px rgba(245,158,11,0.08); }
+}
+@keyframes flash-bull {
+  0% { background: transparent; }
+  25% { background: var(--bull-dim); }
+  100% { background: transparent; }
+}
+@keyframes flash-bear {
+  0% { background: transparent; }
+  25% { background: var(--bear-dim); }
+  100% { background: transparent; }
 }
 
 /* Table rows stagger */
 .table-row { animation: fade-up 0.3s ease both; }
-.table-row:nth-child(1) { animation-delay: 0.03s; }
-.table-row:nth-child(2) { animation-delay: 0.06s; }
-.table-row:nth-child(3) { animation-delay: 0.09s; }
-.table-row:nth-child(4) { animation-delay: 0.12s; }
-.table-row:nth-child(5) { animation-delay: 0.15s; }
-.table-row:nth-child(6) { animation-delay: 0.18s; }
-.table-row:nth-child(7) { animation-delay: 0.21s; }
-.table-row:nth-child(8) { animation-delay: 0.24s; }
-.table-row:nth-child(9) { animation-delay: 0.27s; }
-.table-row:nth-child(10) { animation-delay: 0.30s; }
+.table-row:nth-child(1) { animation-delay: 0.02s; }
+.table-row:nth-child(2) { animation-delay: 0.04s; }
+.table-row:nth-child(3) { animation-delay: 0.06s; }
+.table-row:nth-child(4) { animation-delay: 0.08s; }
+.table-row:nth-child(5) { animation-delay: 0.10s; }
+.table-row:nth-child(6) { animation-delay: 0.12s; }
+.table-row:nth-child(7) { animation-delay: 0.14s; }
+.table-row:nth-child(8) { animation-delay: 0.16s; }
+.table-row:nth-child(9) { animation-delay: 0.18s; }
+.table-row:nth-child(10) { animation-delay: 0.20s; }
 
-/* ── Ticker strip ───────────────────── */
+/* ── Ticker strip ── */
 .ticker-strip {
-  background: rgba(0,0,0,0.4);
-  border-bottom: 1px solid var(--border-dim);
-  font-family: 'IBM Plex Mono', monospace;
+  background: var(--surface-low);
+  font-family: 'Space Grotesk', monospace;
   font-size: 12px;
   overflow: hidden;
   white-space: nowrap;
@@ -164,24 +174,27 @@ body::before {
   animation: ticker-march 45s linear infinite;
 }
 .ticker-item { padding: 0 24px; display: inline-flex; align-items: center; gap: 8px; }
-.ticker-separator { color: var(--border-default); padding: 0 8px; }
+.ticker-separator { color: var(--outline-variant); padding: 0 8px; }
 
-/* ── Scrollbar ──────────────────────── */
-::-webkit-scrollbar { width: 5px; }
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--border-default); }
+::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--outline); }
 
-/* ── Utility ────────────────────────── */
+/* ── Shimmer ── */
 .shimmer {
-  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-elevated) 50%, var(--bg-surface) 75%);
+  background: linear-gradient(90deg, var(--surface-container) 25%, var(--surface-high) 50%, var(--surface-container) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+  border-radius: 0.75rem;
 }
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+
+/* ── Utility ── */
 .gold { color: var(--bazaar-gold); }
 .bull { color: var(--bull); }
 .bear { color: var(--bear); }

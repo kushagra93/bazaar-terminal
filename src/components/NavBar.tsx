@@ -42,8 +42,8 @@ function SessionPill() {
       onMouseLeave={() => setHovered(false)}
     >
       <div
-        className="flex items-center gap-2 px-3 py-1.5 rounded-lg border font-data text-xs"
-        style={{ borderColor: session.color, color: session.color }}
+        className="flex items-center gap-2 px-3 py-1.5 rounded-full font-data text-xs"
+        style={{ background: `${session.color}12`, color: session.color }}
       >
         <span style={{ animation: session.key === "open" ? "pulse-dot 2s ease infinite" : "none" }}>
           {session.icon}
@@ -64,24 +64,24 @@ function SessionPill() {
 function CurrencyToggle() {
   const { currency, setCurrency, rate } = useCurrency();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-[var(--border-dim)] p-0.5">
+    <div className="flex items-center gap-0.5 rounded-full bg-[var(--surface-high)] p-0.5">
       <button
         onClick={() => setCurrency("DUAL")}
-        className={`px-2 py-1 rounded text-[10px] font-body font-semibold transition ${
-          currency === "DUAL" ? "text-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-secondary)]"
+        className={`px-2.5 py-1 rounded-full text-[10px] font-data font-semibold transition ${
+          currency === "DUAL" ? "text-[var(--primary)] bg-[var(--surface-highest)]" : "text-[var(--on-surface-variant)]"
         }`}
         title="USD with INR in brackets"
       >$ (₹)</button>
       <button
         onClick={() => setCurrency("INR")}
-        className={`px-2 py-1 rounded text-[10px] font-body font-semibold transition ${
-          currency === "INR" ? "text-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-secondary)]"
+        className={`px-2.5 py-1 rounded-full text-[10px] font-data font-semibold transition ${
+          currency === "INR" ? "text-[var(--primary)] bg-[var(--surface-highest)]" : "text-[var(--on-surface-variant)]"
         }`}
       >₹</button>
       <button
         onClick={() => setCurrency("USD")}
-        className={`px-2 py-1 rounded text-[10px] font-body font-semibold transition ${
-          currency === "USD" ? "text-[var(--bull)] bg-[var(--bull-dim)]" : "text-[var(--text-secondary)]"
+        className={`px-2.5 py-1 rounded-full text-[10px] font-data font-semibold transition ${
+          currency === "USD" ? "text-[var(--primary)] bg-[var(--surface-highest)]" : "text-[var(--on-surface-variant)]"
         }`}
       >$</button>
     </div>
@@ -91,13 +91,13 @@ function CurrencyToggle() {
 function LanguageToggle() {
   const { lang, setLang } = useLanguage();
   return (
-    <div className="flex items-center gap-0.5 rounded-lg border border-[var(--border-dim)] p-0.5">
+    <div className="flex items-center gap-0.5 rounded-full bg-[var(--surface-high)] p-0.5">
       {LANG_OPTIONS.map(opt => (
         <button
           key={opt.value}
           onClick={() => setLang(opt.value)}
-          className={`px-1.5 py-1 rounded text-[10px] font-body font-semibold transition ${
-            lang === opt.value ? "text-[var(--bazaar-gold)] bg-[var(--bazaar-gold-dim)]" : "text-[var(--text-secondary)]"
+          className={`px-1.5 py-1 rounded-full text-[10px] font-body font-semibold transition ${
+            lang === opt.value ? "text-[var(--primary)] bg-[var(--surface-highest)]" : "text-[var(--on-surface-variant)]"
           }`}
         >{opt.label}</button>
       ))}
@@ -149,7 +149,7 @@ export function NavBar() {
   return (
     <>
       {/* Main nav — 60px */}
-      <nav className="sticky top-0 z-50 border-b border-[var(--border-dim)] bg-[var(--bg-base)]/90 backdrop-blur-xl px-6" style={{ height: 60 }}>
+      <nav className="sticky top-0 z-50 glass px-6" style={{ height: 60 }}>
         <div className="max-w-[1440px] mx-auto h-full flex items-center justify-between">
           {/* Left: logo + links */}
           <div className="flex items-center gap-4">

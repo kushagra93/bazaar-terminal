@@ -12,7 +12,7 @@ const TABS = [
 
 export function MobileNav() {
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--border-subtle)] bg-[var(--bg-overlay)] backdrop-blur-xl" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 glass" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
       <div className="flex items-center justify-around h-16">
         {TABS.map(tab => {
           const Icon = tab.icon;

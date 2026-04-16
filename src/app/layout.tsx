@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <NavBar />
           </div>
           {/* Mobile top bar — shown on mobile only */}
-          <div className="md:hidden sticky top-0 z-50 border-b border-[var(--border-dim)] bg-[var(--bg-base)]/90 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between">
+          <div className="md:hidden sticky top-0 z-50 glass px-4 py-2.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-[var(--bazaar-gold)] text-base">▣</span>
               <span className="font-display text-sm font-bold text-[var(--text-primary)] tracking-[2px]">BAZAAR</span>
