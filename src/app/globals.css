@@ -1,0 +1,187 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=IBM+Plex+Mono:wght@300;400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Backgrounds */
+  --bg-base: #07080b;
+  --bg-surface: #0d0f14;
+  --bg-elevated: #141720;
+  --bg-overlay: rgba(13,15,20,0.95);
+
+  /* Borders */
+  --border-dim: rgba(255,255,255,0.04);
+  --border-subtle: rgba(255,255,255,0.07);
+  --border-default: rgba(255,255,255,0.11);
+  --border-active: rgba(255,255,255,0.20);
+
+  /* Brand — Bazaar Spice Palette */
+  --bazaar-gold: #e8a045;
+  --bazaar-gold-dim: rgba(232,160,69,0.12);
+  --bazaar-amber: #d4750a;
+  --bazaar-cream: #f5e6c8;
+
+  /* Market Semantics */
+  --bull: #22c55e;
+  --bull-dim: rgba(34,197,94,0.10);
+  --bear: #ef4444;
+  --bear-dim: rgba(239,68,68,0.10);
+  --neutral: #6b7280;
+  --squeeze: #f59e0b;
+  --squeeze-dim: rgba(245,158,11,0.12);
+
+  /* Sessions */
+  --session-premarket: #f59e0b;
+  --session-open: #22c55e;
+  --session-afterhours: #8b5cf6;
+  --session-overnight: #374151;
+
+  /* Events */
+  --event-earnings: #818cf8;
+  --event-fed: #f97316;
+  --event-split: #06b6d4;
+
+  /* INR */
+  --inr: #e8a045;
+
+  /* Text */
+  --text-primary: #e2e8f0;
+  --text-secondary: #64748b;
+  --text-dim: #2d3748;
+  --text-data: #e2e8f0;
+
+  /* Sectors */
+  --sector-tech: #6366f1;
+  --sector-ev: #10b981;
+  --sector-fintech: #14b8a6;
+  --sector-meme: #f43f5e;
+  --sector-growth: #8b5cf6;
+}
+
+/* ── Base ───────────────────────────── */
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 900px 500px at 15% 10%, rgba(232,160,69,0.04) 0%, transparent 65%),
+    radial-gradient(ellipse 700px 600px at 85% 90%, rgba(99,102,241,0.04) 0%, transparent 65%),
+    radial-gradient(ellipse 500px 400px at 50% 50%, rgba(239,68,68,0.02) 0%, transparent 60%);
+}
+
+/* ── Typography classes ─────────────── */
+.font-display { font-family: 'Playfair Display', Georgia, serif; }
+.font-data    { font-family: 'IBM Plex Mono', 'Menlo', monospace; }
+.font-body    { font-family: 'DM Sans', system-ui, sans-serif; }
+
+/* ── Card system ────────────────────── */
+.card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-dim);
+  border-radius: 10px;
+  transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+.card:hover {
+  border-color: var(--border-subtle);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--border-dim) inset;
+  transform: translateY(-1px);
+}
+.card--bull { border-left: 3px solid var(--bull); }
+.card--bear { border-left: 3px solid var(--bear); }
+.card--earnings { border-left: 3px solid var(--event-earnings); }
+.card--fed { border-left: 3px solid var(--event-fed); }
+.card--squeeze {
+  border-left: 3px solid var(--squeeze);
+  box-shadow: 0 0 0 1px rgba(245,158,11,0.1) inset;
+  animation: squeeze-pulse 2s ease-in-out infinite;
+}
+
+/* ── Animations ─────────────────────── */
+@keyframes flash-bull {
+  0% { background: transparent; color: var(--text-data); }
+  25% { background: var(--bull-dim); color: var(--bull); }
+  100% { background: transparent; color: var(--text-data); }
+}
+@keyframes flash-bear {
+  0% { background: transparent; color: var(--text-data); }
+  25% { background: var(--bear-dim); color: var(--bear); }
+  100% { background: transparent; color: var(--text-data); }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes ticker-march {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes squeeze-pulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(245,158,11,0.1) inset; }
+  50% { box-shadow: 0 0 24px 2px rgba(245,158,11,0.12), 0 0 0 1px rgba(245,158,11,0.2) inset; }
+}
+
+/* Table rows stagger */
+.table-row { animation: fade-up 0.3s ease both; }
+.table-row:nth-child(1) { animation-delay: 0.03s; }
+.table-row:nth-child(2) { animation-delay: 0.06s; }
+.table-row:nth-child(3) { animation-delay: 0.09s; }
+.table-row:nth-child(4) { animation-delay: 0.12s; }
+.table-row:nth-child(5) { animation-delay: 0.15s; }
+.table-row:nth-child(6) { animation-delay: 0.18s; }
+.table-row:nth-child(7) { animation-delay: 0.21s; }
+.table-row:nth-child(8) { animation-delay: 0.24s; }
+.table-row:nth-child(9) { animation-delay: 0.27s; }
+.table-row:nth-child(10) { animation-delay: 0.30s; }
+
+/* ── Ticker strip ───────────────────── */
+.ticker-strip {
+  background: rgba(0,0,0,0.4);
+  border-bottom: 1px solid var(--border-dim);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  height: 36px;
+  display: flex;
+  align-items: center;
+}
+.ticker-scroll {
+  display: inline-flex;
+  animation: ticker-march 45s linear infinite;
+}
+.ticker-item { padding: 0 24px; display: inline-flex; align-items: center; gap: 8px; }
+.ticker-separator { color: var(--border-default); padding: 0 8px; }
+
+/* ── Scrollbar ──────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-default); }
+
+/* ── Utility ────────────────────────── */
+.shimmer {
+  background: linear-gradient(90deg, var(--bg-surface) 25%, var(--bg-elevated) 50%, var(--bg-surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.gold { color: var(--bazaar-gold); }
+.bull { color: var(--bull); }
+.bear { color: var(--bear); }
