@@ -2,28 +2,15 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useCurrency, Price } from "@/lib/currency";
-import { useLanguage } from "@/lib/language";
 import { getSessionInfo, getISTTime } from "@/lib/session";
 import { useStocks, useEvents, useSentiment, SECTOR_MAP, CONTEXT_SYMBOLS } from "@/lib/data";
-import { TrendingUp, TrendingDown, Zap, Calendar, BarChart3, ArrowUp, ArrowDown, Activity, Shield, ExternalLink } from "lucide-react";
 import { StockLogo } from "@/components/StockLogo";
-
-function MiniChange({ pct }: { pct: number }) {
-  const c = pct > 0 ? "var(--bull)" : pct < 0 ? "var(--bear)" : "var(--neutral)";
-  return (
-    <span className="font-data text-xs font-semibold inline-flex items-center gap-0.5" style={{ color: c }}>
-      {pct > 0 ? <ArrowUp size={10} /> : pct < 0 ? <ArrowDown size={10} /> : null}
-      {Math.abs(pct).toFixed(2)}%
-    </span>
-  );
-}
 
 export default function OverviewPage() {
   const { format } = useCurrency();
-  const { t } = useLanguage();
   const [session, setSession] = useState(getSessionInfo());
   const [istTime, setIstTime] = useState(getISTTime());
-  const { stocks, loading, lastUpdated } = useStocks(10_000);
+  const { stocks, loading, lastUpdated } = useStocks(3_000);
   const { events } = useEvents();
   const { sentiment } = useSentiment();
 
@@ -34,266 +21,232 @@ export default function OverviewPage() {
 
   const context = useMemo(() => stocks.filter((s: any) => CONTEXT_SYMBOLS.includes(s.symbol)), [stocks]);
   const ranked = useMemo(() => stocks.filter((s: any) => !CONTEXT_SYMBOLS.includes(s.symbol)), [stocks]);
+  const topGainers = useMemo(() => [...ranked].sort((a: any, b: any) => (b.stockChange || b.change24h || 0) - (a.stockChange || a.change24h || 0)).slice(0, 3), [ranked]);
+  const topLosers = useMemo(() => [...ranked].sort((a: any, b: any) => (a.stockChange || a.change24h || 0) - (b.stockChange || b.change24h || 0)).slice(0, 2), [ranked]);
+  const earningsEvents = useMemo(() => (events.earnings || []).slice(0, 3), [events]);
   const sectors = useMemo(() => Object.entries(SECTOR_MAP).map(([sector, symbols]) => {
     const ss = ranked.filter((s: any) => symbols.includes(s.symbol));
     const avgChange = ss.length > 0 ? ss.reduce((sum: number, s: any) => sum + (s.stockChange || s.change24h || 0), 0) / ss.length : 0;
-    const totalOI = ss.reduce((sum: number, s: any) => sum + (s.openInterest || 0), 0);
-    return { sector, avgChange, totalOI, count: ss.length };
+    return { sector, avgChange, count: ss.length };
   }), [ranked]);
 
-  const topMovers = useMemo(() => [...ranked].sort((a: any, b: any) => Math.abs(b.stockChange || b.change24h || 0) - Math.abs(a.stockChange || a.change24h || 0)).slice(0, 8), [ranked]);
-  const negFunding = useMemo(() => ranked.filter((s: any) => s.fundingRate < -0.001).sort((a: any, b: any) => a.fundingRate - b.fundingRate).slice(0, 4), [ranked]);
-  const posFunding = useMemo(() => ranked.filter((s: any) => s.fundingRate > 0.005).sort((a: any, b: any) => b.fundingRate - a.fundingRate).slice(0, 4), [ranked]);
-  const earningsEvents = useMemo(() => (events.earnings || []).slice(0, 6), [events]);
-
-  const totalOI = ranked.reduce((s: number, st: any) => s + (st.openInterest || 0), 0);
-  const totalVol = ranked.reduce((s: number, st: any) => s + (st.volume24h || 0), 0);
   const fng = sentiment?.fearGreed;
-  const sectorLabels: Record<string, string> = { tech: "Tech", ev: "EV/Auto", fintech: "Fintech", meme: "Meme", growth: "Growth" };
+  const spy = context.find((s: any) => s.symbol === "SPY");
+  const qqq = context.find((s: any) => s.symbol === "QQQ");
+  const mostVolatile = [...ranked].sort((a: any, b: any) => Math.abs(b.stockChange || b.change24h || 0) - Math.abs(a.stockChange || a.change24h || 0))[0];
+  const sectorLabels: Record<string, string> = { tech: "Technology", ev: "EV/Auto", fintech: "Financials", meme: "Meme", growth: "Growth" };
+  const sectorIcons: Record<string, string> = { tech: "memory", ev: "electric_car", fintech: "account_balance", meme: "rocket_launch", growth: "trending_up" };
 
   return (
-    <div className="max-w-[1440px] mx-auto space-y-4">
-      {/* ═══ ROW 1: Hero Session + Market Context ═══ */}
-      <div className="grid grid-cols-12 gap-3" style={{ minHeight: 180 }}>
-        {/* Session Card — spans 5 */}
-        <div className="col-span-12 lg:col-span-5 rounded-2xl p-5 relative overflow-hidden" style={{
-          background: `linear-gradient(145deg, ${session.color}0a 0%, var(--bg-surface) 50%)`,
-          border: `1px solid ${session.color}18`,
-        }}>
-          <div className="absolute top-0 right-0 w-48 h-48 rounded-full blur-[60px] opacity-[0.07]" style={{ background: session.color }} />
-          <div className="relative">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg" style={{ background: `${session.color}15`, color: session.color, animation: session.key === "open" ? "pulse-dot 2s ease infinite" : "none" }}>
-                {session.icon}
-              </div>
-              <div>
-                <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-[3px]">Market Pulse</div>
-                <div className="font-display text-xl font-bold" style={{ color: session.color }}>{session.label}</div>
-              </div>
-            </div>
-            <div className="mt-3 font-data text-2xl font-semibold text-[var(--text-primary)]">{istTime}</div>
-            <div className="text-[10px] font-body text-[var(--text-dim)] mt-0.5">{session.sublabel}</div>
-            {/* Quick stats */}
-            <div className="flex gap-4 mt-4 text-[11px] font-body text-[var(--text-secondary)]">
-              {context[0] && <span>SPY <span className="font-data" style={{ color: (context[0] as any).change24h >= 0 ? "var(--bull)" : "var(--bear)" }}>{((context[0] as any).change24h >= 0 ? "+" : "")}{((context[0] as any).change24h || 0).toFixed(2)}%</span></span>}
-              {context[1] && <span>QQQ <span className="font-data" style={{ color: (context[1] as any).change24h >= 0 ? "var(--bull)" : "var(--bear)" }}>{((context[1] as any).change24h >= 0 ? "+" : "")}{((context[1] as any).change24h || 0).toFixed(2)}%</span></span>}
-              {fng && <span>F&G <span className="font-data" style={{ color: fng.value >= 55 ? "var(--bull)" : fng.value >= 45 ? "var(--bazaar-gold)" : "var(--bear)" }}>{fng.value}</span></span>}
-            </div>
-            {/* Session bar */}
-            <div className="mt-3 flex gap-0.5 h-1 rounded-full overflow-hidden">
-              {[{ key: "premarket", color: "var(--session-premarket)", w: "23%" }, { key: "open", color: "var(--session-open)", w: "27%" }, { key: "afterhours", color: "var(--session-afterhours)", w: "17%" }, { key: "overnight", color: "var(--session-overnight)", w: "33%" }].map(s => (
-                <div key={s.key} className="h-full rounded-sm" style={{ background: s.color, width: s.w, opacity: session.key === s.key ? 1 : 0.1 }} />
-              ))}
-            </div>
-          </div>
-        </div>
+    <div className="max-w-[1400px] mx-auto space-y-10">
 
-        {/* SPY + QQQ — spans 4 */}
-        <div className="col-span-6 lg:col-span-2 flex flex-col gap-3">
-          {(loading && context.length === 0 ? [null, null] : context.slice(0, 2)).map((s: any, i) =>
-            s ? (
-              <div key={s.symbol} className="flex-1 rounded-xl p-4 relative overflow-hidden" style={{
-                background: `linear-gradient(155deg, ${s.change24h >= 0 ? "rgba(34,197,94,0.05)" : "rgba(239,68,68,0.05)"}, var(--bg-surface))`,
-                border: `1px solid ${s.change24h >= 0 ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)"}`,
-              }}>
-                <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">{s.symbol}</div>
-                <div className="font-display text-xl font-bold mt-1"><Price usd={s.stockPrice || s.price} /></div>
-                <MiniChange pct={s.stockChange || s.change24h || 0} />
-              </div>
-            ) : <div key={i} className="flex-1 rounded-xl shimmer" />
-          )}
+      {/* ═══ HERO: Giant Session Title ═══ */}
+      <div className="flex items-end justify-between">
+        <div>
+          <span className="font-data text-xs text-[var(--primary)] uppercase tracking-[0.3em] font-bold">Terminal Intelligence</span>
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter mt-2 text-[var(--on-surface)]">
+            {session.label}
+          </h1>
         </div>
-
-        {/* Stats — spans 3 */}
-        <div className="col-span-6 lg:col-span-2 flex flex-col gap-3">
-          <div className="flex-1 rounded-xl p-3 border border-[var(--border-dim)]" style={{ background: "linear-gradient(155deg, rgba(232,160,69,0.04), var(--bg-surface))" }}>
-            <div className="flex items-center gap-1.5 text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">
-              <BarChart3 size={10} className="text-[var(--bazaar-gold)]" /> OI
-            </div>
-            <div className="font-display text-lg font-bold mt-1 text-[var(--bazaar-gold)]">{loading ? "..." : format(totalOI)}</div>
-          </div>
-          <div className="flex-1 rounded-xl p-3 border border-[var(--border-dim)]" style={{ background: "linear-gradient(155deg, rgba(99,102,241,0.04), var(--bg-surface))" }}>
-            <div className="flex items-center gap-1.5 text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">
-              <Activity size={10} className="text-indigo-400" /> Volume
-            </div>
-            <div className="font-display text-lg font-bold mt-1 text-indigo-400">{loading ? "..." : format(totalVol)}</div>
-          </div>
-        </div>
-
-        {/* Perps count + freshness — spans 3 */}
-        <div className="col-span-12 lg:col-span-3 flex flex-col gap-3">
-          <div className="flex-1 rounded-xl p-3 border border-[var(--border-dim)] bg-[var(--bg-surface)]">
-            <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">Live Perps</div>
-            <div className="font-display text-lg font-bold mt-1">{ranked.filter((s:any) => s.openInterest > 0).length} <span className="text-sm font-data text-[var(--text-dim)]">with OI</span></div>
-            <div className="font-data text-[10px] text-[var(--text-dim)] mt-1">{ranked.length} stocks tracked total</div>
-          </div>
-          <div className="flex-1 rounded-xl p-3 border border-[var(--border-dim)] bg-[var(--bg-surface)] flex flex-col justify-center">
-            <div className="text-[9px] font-body text-[var(--text-dim)] uppercase tracking-wider">Sources</div>
-            <div className="flex gap-1.5 mt-1.5">
-              {["coinbase", "kraken", "finnhub"].map(src => (
-                <span key={src} className="text-[8px] font-data px-2 py-1 rounded-md bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border-dim)]">{src}</span>
-              ))}
-            </div>
-            {lastUpdated && <div className="font-data text-[9px] text-[var(--bazaar-gold)] mt-1.5">{Math.round((Date.now() - lastUpdated.getTime()) / 1000)}s ago</div>}
+        <div className="hidden md:flex items-center gap-4">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--primary)]10 rounded-full">
+            <div className="w-2 h-2 rounded-full bg-[var(--primary-dim)] animate-pulse" style={{ boxShadow: "0 0 8px var(--primary)" }} />
+            <span className="font-data text-xs text-[var(--primary-dim)] uppercase tracking-widest">{istTime}</span>
           </div>
         </div>
       </div>
 
-      {/* ═══ ROW 2: Movers + Funding + Earnings ═══ */}
-      <div className="grid grid-cols-12 gap-3">
-        {/* Top Movers — 5 cols */}
-        <div className="col-span-12 md:col-span-5 card p-4">
-          <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <TrendingUp size={11} className="text-[var(--bull)]" /> Biggest Movers
+      {/* ═══ BENTO GRID ═══ */}
+      <div className="grid grid-cols-12 gap-6">
+
+        {/* ── Market Pulse (8 cols) ── */}
+        <section className="col-span-12 lg:col-span-8 bg-[var(--surface-container)] rounded-xl p-6 md:p-8">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="font-display text-lg font-bold">Market Pulse</h2>
+            <span className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[var(--primary)] animate-pulse" /> Live Update
+            </span>
           </div>
-          {loading ? Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-7 rounded shimmer mb-2" />) :
-            topMovers.map((s: any, i: number) => {
-              const chg = s.stockChange || s.change24h || 0;
-              return (
-                <div key={s.symbol} className="flex items-center justify-between py-1.5 border-b border-[var(--border-dim)] last:border-0 hover:bg-[var(--bg-elevated)] transition rounded px-1 -mx-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-data text-[9px] text-[var(--text-dim)] w-4">#{i+1}</span>
-                    <StockLogo symbol={s.symbol} size={18} />
-                    <span className="font-body text-[13px] font-semibold">{s.symbol}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {/* SPY */}
+            <div className="bg-[var(--surface-low)] p-5 rounded-xl" style={{ boxShadow: spy && (spy.change24h || 0) >= 0 ? "0 0 15px rgba(164,255,185,0.08)" : "none" }}>
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">SPY / S&P 500</p>
+              <div className="flex items-baseline gap-2">
+                <span className="font-data text-2xl font-bold">{spy ? <Price usd={spy.stockPrice || spy.price} /> : "..."}</span>
+              </div>
+              {spy && <span className={`font-data text-xs font-bold ${(spy.stockChange || spy.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(spy.stockChange || spy.change24h || 0) >= 0 ? "+" : ""}{(spy.stockChange || spy.change24h || 0).toFixed(2)}%</span>}
+              <div className="mt-4 h-10 w-full">
+                <svg className="w-full h-full" viewBox="0 0 100 30">
+                  <defs><linearGradient id="gp" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.2"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0"/></linearGradient></defs>
+                  <path d="M0,25 Q15,20 25,22 T45,15 T65,18 T85,8 T100,12" fill="none" stroke="var(--primary)" strokeWidth="2"/>
+                  <path d="M0,25 Q15,20 25,22 T45,15 T65,18 T85,8 T100,12 L100,30 L0,30 Z" fill="url(#gp)" opacity="0.3"/>
+                </svg>
+              </div>
+            </div>
+            {/* QQQ */}
+            <div className="bg-[var(--surface-low)] p-5 rounded-xl">
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">QQQ / NASDAQ</p>
+              <div className="flex items-baseline gap-2">
+                <span className="font-data text-2xl font-bold">{qqq ? <Price usd={qqq.stockPrice || qqq.price} /> : "..."}</span>
+              </div>
+              {qqq && <span className={`font-data text-xs font-bold ${(qqq.stockChange || qqq.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(qqq.stockChange || qqq.change24h || 0) >= 0 ? "+" : ""}{(qqq.stockChange || qqq.change24h || 0).toFixed(2)}%</span>}
+              <div className="mt-4 h-10 w-full opacity-50">
+                <svg className="w-full h-full" viewBox="0 0 100 30">
+                  <path d="M0,20 Q20,10 35,18 T55,12 T75,8 T100,5" fill="none" stroke="var(--tertiary)" strokeWidth="2"/>
+                </svg>
+              </div>
+            </div>
+            {/* Fear & Greed */}
+            <div className="bg-[var(--surface-low)] p-5 rounded-xl">
+              <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">FEAR & GREED</p>
+              <div className="flex items-baseline gap-2">
+                <span className={`font-data text-2xl font-bold ${fng ? (fng.value >= 55 ? "text-[var(--primary)]" : fng.value >= 45 ? "text-[var(--tertiary)]" : "text-[var(--secondary)]") : ""}`}>{fng ? fng.value : "..."}</span>
+                <span className="font-data text-xs text-[var(--on-surface-variant)]">{fng?.label || ""}</span>
+              </div>
+              {fng?.vix && (
+                <div className="mt-3 text-xs text-[var(--on-surface-variant)]">
+                  VIX: <span className="font-data font-bold text-[var(--on-surface)]">{fng.vix}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ── VIX / Top Movers sidebar (4 cols) ── */}
+        <section className="col-span-12 lg:col-span-4 bg-[var(--surface-container)] rounded-xl p-6 md:p-8 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-[var(--secondary)]">⚡</span>
+              <h2 className="font-display text-lg font-bold">Top Movers</h2>
+            </div>
+            <p className="text-[var(--on-surface-variant)] text-sm mb-6">{session.context}</p>
+          </div>
+          <div className="space-y-0">
+            {loading ? Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-14 shimmer mb-2 rounded-xl" />) :
+              [...topGainers, ...topLosers].slice(0, 5).map((s: any) => {
+                const chg = s.stockChange || s.change24h || 0;
+                return (
+                  <div key={s.symbol} className="flex items-center justify-between py-3.5 hover:bg-[var(--surface-bright)] transition-colors rounded-lg px-2 -mx-2">
+                    <div className="flex items-center gap-3">
+                      <StockLogo symbol={s.symbol} size={24} />
+                      <div>
+                        <p className="font-data text-xs font-bold">{s.symbol}</p>
+                        <p className="text-[10px] text-[var(--on-surface-variant)]">{s.name}</p>
+                      </div>
+                    </div>
+                    <span className={`font-data text-base font-bold ${chg >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{chg >= 0 ? "+" : ""}{chg.toFixed(2)}%</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-data text-[11px] text-[var(--text-secondary)]"><Price usd={s.stockPrice || s.price} /></span>
-                    <span className={`font-data text-[11px] font-semibold px-1.5 py-0.5 rounded ${chg >= 0 ? "text-[var(--bull)] bg-[var(--bull-dim)]" : "text-[var(--bear)] bg-[var(--bear-dim)]"}`}>
-                      {chg >= 0 ? "+" : ""}{chg.toFixed(2)}%
-                    </span>
+                );
+              })}
+          </div>
+        </section>
+
+        {/* ── Earnings Today (4 cols) ── */}
+        <section className="col-span-12 md:col-span-4 bg-[var(--surface-low)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display font-bold text-sm">Earnings This Week</h3>
+          </div>
+          <div className="space-y-4">
+            {earningsEvents.length === 0 ? <p className="text-sm text-[var(--on-surface-variant)]">{loading ? "Loading..." : "No earnings this week"}</p> :
+              earningsEvents.map((e: any) => (
+                <div key={e.id} className="flex gap-4 items-center">
+                  <StockLogo symbol={e.symbol} size={32} />
+                  <div className="flex-1">
+                    <p className="font-display text-sm font-bold">{e.symbol} Earnings</p>
+                    <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-wider">{e.date} · {e.time}</p>
                   </div>
                 </div>
+              ))}
+          </div>
+        </section>
+
+        {/* ── Sector Distribution (4 cols) ── */}
+        <section className="col-span-12 md:col-span-4 bg-[var(--surface-container)] rounded-xl p-6">
+          <h3 className="font-display font-bold text-sm mb-4">Sector Distribution</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {sectors.map(s => {
+              const isUp = s.avgChange >= 0;
+              const borderColor = isUp ? "var(--primary)" : s.avgChange < -1 ? "var(--secondary)" : "var(--tertiary)";
+              return (
+                <a key={s.sector} href={`/markets?sector=${s.sector}`}
+                  className="flex-shrink-0 w-28 aspect-square bg-[var(--surface-highest)] rounded-xl p-4 flex flex-col justify-between hover:scale-105 transition-transform"
+                  style={{ borderBottom: `4px solid ${borderColor}` }}>
+                  <span className="font-display text-xs font-bold">{sectorLabels[s.sector] || s.sector}</span>
+                  <span className={`font-data text-xs ${isUp ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{s.count > 0 ? `${isUp ? "+" : ""}${s.avgChange.toFixed(2)}%` : "—"}</span>
+                </a>
               );
             })}
-        </div>
-
-        {/* Funding — 3 cols */}
-        <div className="col-span-6 md:col-span-3 card p-4">
-          <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Zap size={11} className="text-[var(--squeeze)]" /> Funding Rates
           </div>
-          {negFunding.length > 0 && (
-            <div className="mb-3">
-              <div className="text-[8px] font-body text-[var(--bear)] uppercase tracking-wider mb-1.5">Shorts pay longs</div>
-              {negFunding.map((s: any) => (
-                <div key={s.symbol} className="flex items-center justify-between py-1.5">
-                  <div className="flex items-center gap-1.5"><StockLogo symbol={s.symbol} size={16} /><span className="font-body text-[13px] font-semibold">{s.symbol}</span></div>
-                  <span className="font-data text-[11px] text-[var(--bear)] font-medium">{(s.fundingRate * 100).toFixed(4)}%</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {posFunding.length > 0 && (
-            <div>
-              <div className="text-[8px] font-body text-[var(--bull)] uppercase tracking-wider mb-1.5">Longs pay shorts</div>
-              {posFunding.map((s: any) => (
-                <div key={s.symbol} className="flex items-center justify-between py-1.5">
-                  <div className="flex items-center gap-1.5"><StockLogo symbol={s.symbol} size={16} /><span className="font-body text-[13px] font-semibold">{s.symbol}</span></div>
-                  <span className="font-data text-[11px] text-[var(--bull)] font-medium">+{(s.fundingRate * 100).toFixed(4)}%</span>
-                </div>
-              ))}
-            </div>
-          )}
-          {!loading && negFunding.length === 0 && posFunding.length === 0 && (
-            <div className="text-[11px] text-[var(--text-dim)] py-6 text-center">No extreme rates</div>
-          )}
-        </div>
+        </section>
 
-        {/* Earnings — 4 cols */}
-        <div className="col-span-6 md:col-span-4 card p-4">
-          <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Calendar size={11} className="text-[var(--event-earnings)]" /> Upcoming Earnings
+        {/* ── Most Volatile hero (4 cols) ── */}
+        {mostVolatile && (
+          <section className="col-span-12 md:col-span-4 bg-[var(--surface-container)] rounded-xl p-6 relative overflow-hidden">
+            <p className="font-data text-[10px] text-[var(--on-surface-variant)] uppercase tracking-widest mb-1">Most Volatile</p>
+            <div className="flex items-center gap-3 mb-2">
+              <StockLogo symbol={mostVolatile.symbol} size={32} />
+              <h3 className="font-display text-2xl font-extrabold">{mostVolatile.symbol}</h3>
+            </div>
+            <span className={`font-data text-sm font-bold ${(mostVolatile.stockChange || mostVolatile.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
+              {(mostVolatile.stockChange || mostVolatile.change24h || 0) >= 0 ? "+" : ""}{(mostVolatile.stockChange || mostVolatile.change24h || 0).toFixed(2)}% Today
+            </span>
+            <div className="mt-4">
+              <span className="font-data text-3xl font-bold"><Price usd={mostVolatile.stockPrice || mostVolatile.price} /></span>
+            </div>
+          </section>
+        )}
+
+        {/* ── Detailed Watchlist (12 cols) ── */}
+        <section className="col-span-12 bg-[var(--surface-low)] rounded-xl overflow-hidden">
+          <div className="p-6 flex justify-between items-center">
+            <h3 className="font-display font-bold text-lg">Detailed Watchlist</h3>
+            <a href="/markets" className="font-data text-[10px] text-[var(--primary)] uppercase tracking-widest hover:underline">View All ({ranked.length})</a>
           </div>
-          {earningsEvents.length === 0 ? <div className="text-[11px] text-[var(--text-dim)] py-4 text-center">{loading ? "Loading..." : "No upcoming earnings"}</div> :
-            earningsEvents.map((e: any) => {
-              const daysAway = Math.ceil((new Date(e.date).getTime() - Date.now()) / 86400000);
-              return (
-                <div key={e.id} className="flex items-center gap-2.5 py-1.5 border-b border-[var(--border-dim)] last:border-0">
-                  <StockLogo symbol={e.symbol} size={18} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-body text-[13px] font-semibold">{e.symbol}</span>
-                      {daysAway <= 1 && <span className="text-[7px] font-body font-bold px-1 py-0.5 rounded bg-[var(--bazaar-gold-dim)] text-[var(--bazaar-gold)] animate-pulse">{daysAway <= 0 ? "TODAY" : "TMW"}</span>}
-                    </div>
-                    <div className="text-[9px] font-data text-[var(--text-dim)]">{e.time} · {e.date}</div>
-                  </div>
-                  <span className="font-data text-[10px] text-[var(--text-dim)]">{daysAway}d</span>
-                </div>
-              );
-            })}
-          <a href="/events" className="block mt-2 text-[10px] text-[var(--bazaar-gold)] hover:underline font-body">All events →</a>
-        </div>
-      </div>
-
-      {/* ═══ ROW 3: Sector Heatmap ═══ */}
-      <div className="grid grid-cols-5 gap-2">
-        {sectors.map(s => {
-          const isUp = s.avgChange >= 0;
-          const intensity = Math.min(Math.abs(s.avgChange) / 4, 1);
-          return (
-            <a key={s.sector} href={`/markets?sector=${s.sector}`}
-              className="rounded-xl p-4 transition-all duration-200 hover:scale-[1.02] cursor-pointer relative overflow-hidden"
-              style={{
-                background: `linear-gradient(155deg, ${isUp ? `rgba(34,197,94,${0.06+intensity*0.2})` : `rgba(239,68,68,${0.06+intensity*0.2})`}, var(--bg-surface))`,
-                border: `1px solid ${isUp ? `rgba(34,197,94,${0.08+intensity*0.12})` : `rgba(239,68,68,${0.08+intensity*0.12})`}`,
-              }}
-            >
-              <div className="text-[10px] font-body font-medium uppercase tracking-wider text-[var(--text-primary)]">{sectorLabels[s.sector] || s.sector}</div>
-              <div className="font-data text-xl font-bold mt-1.5" style={{ color: isUp ? "var(--bull)" : "var(--bear)" }}>
-                {s.count > 0 ? `${isUp ? "+" : ""}${s.avgChange.toFixed(2)}%` : "—"}
-              </div>
-              <div className="text-[9px] font-data text-[var(--text-dim)] mt-0.5">{s.count} stocks{s.totalOI > 0 ? ` · OI ${format(s.totalOI)}` : ""}</div>
-            </a>
-          );
-        })}
-      </div>
-
-      {/* ═══ ROW 4: Quick Perps Table ═══ */}
-      <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-dim)]">
-          <div className="text-[10px] font-body text-[var(--text-dim)] uppercase tracking-wider">All Stocks</div>
-          <a href="/markets" className="text-[10px] text-[var(--bazaar-gold)] hover:underline font-body flex items-center gap-1">Full table <ExternalLink size={9} /></a>
-        </div>
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-[var(--border-dim)]" style={{ background: "var(--bg-overlay)" }}>
-              <th className="px-3 py-2 text-left text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">#</th>
-              <th className="px-3 py-2 text-left text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">Stock</th>
-              <th className="px-3 py-2 text-right text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">Price</th>
-              <th className="px-3 py-2 text-right text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">24H</th>
-              <th className="px-3 py-2 text-right text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">OI</th>
-              <th className="px-3 py-2 text-right text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">Volume</th>
-              <th className="px-3 py-2 text-right text-[8px] font-body font-medium text-[var(--text-dim)] uppercase tracking-wider">Funding</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(loading ? [] : ranked.sort((a: any, b: any) => (b.volume24h || 0) - (a.volume24h || 0)).slice(0, 15)).map((s: any, i: number) => {
-              const chg = s.stockChange || s.change24h || 0;
-              return (
-                <tr key={s.symbol} className="table-row border-b border-[var(--border-dim)] hover:bg-[var(--bg-elevated)] transition" style={{ height: 42 }}>
-                  <td className="px-3 font-data text-[9px] text-[var(--text-dim)]">{i+1}</td>
-                  <td className="px-3">
-                    <div className="flex items-center gap-2">
-                      <StockLogo symbol={s.symbol} size={20} />
-                      <span className="font-body text-[13px] font-semibold">{s.symbol}</span>
-                    </div>
-                  </td>
-                  <td className="px-3 text-right font-data text-[12px]"><Price usd={s.stockPrice || s.price} /></td>
-                  <td className="px-3 text-right">
-                    <span className={`font-data text-[10px] font-medium px-1.5 py-0.5 rounded ${chg >= 0 ? "text-[var(--bull)] bg-[var(--bull-dim)]" : "text-[var(--bear)] bg-[var(--bear-dim)]"}`}>
-                      {chg >= 0 ? "+" : ""}{chg.toFixed(2)}%
-                    </span>
-                  </td>
-                  <td className="px-3 text-right font-data text-[10px] text-[var(--text-secondary)]">{s.openInterest > 0 ? format(s.openInterest) : <span className="text-[var(--text-dim)]">—</span>}</td>
-                  <td className="px-3 text-right font-data text-[10px] text-[var(--text-secondary)]">{s.volume24h > 0 ? format(s.volume24h) : <span className="text-[var(--text-dim)]">—</span>}</td>
-                  <td className="px-3 text-right font-data text-[10px]" style={{ color: (s.fundingRate || 0) > 0 ? "var(--bull)" : (s.fundingRate || 0) < 0 ? "var(--bear)" : "var(--text-dim)" }}>
-                    {s.fundingRate ? `${(s.fundingRate * 100).toFixed(3)}%` : "—"}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-[var(--surface-container)]/50">
+                <tr>
+                  <th className="px-6 py-4 font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-normal">Ticker</th>
+                  <th className="px-6 py-4 font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-normal">Price</th>
+                  <th className="px-6 py-4 font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-normal">Change</th>
+                  <th className="px-6 py-4 font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-normal hidden md:table-cell">Volume</th>
+                  <th className="px-6 py-4 font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] font-normal hidden lg:table-cell">Funding</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {(loading ? [] : ranked.sort((a: any, b: any) => (b.volume24h || 0) - (a.volume24h || 0)).slice(0, 8)).map((s: any, i: number) => {
+                  const chg = s.stockChange || s.change24h || 0;
+                  return (
+                    <tr key={s.symbol} className="table-row hover:bg-[var(--surface-bright)] transition-colors group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <StockLogo symbol={s.symbol} size={32} />
+                          <div>
+                            <p className="font-display text-sm font-bold">{s.symbol}</p>
+                            <p className="text-[10px] text-[var(--on-surface-variant)]">{s.name}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 font-data text-sm"><Price usd={s.stockPrice || s.price} /></td>
+                      <td className={`px-6 py-5 font-data text-sm font-bold ${chg >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
+                        {chg >= 0 ? "+" : ""}{chg.toFixed(2)}%
+                      </td>
+                      <td className="px-6 py-5 font-data text-sm text-[var(--on-surface-variant)] hidden md:table-cell">
+                        {s.volume24h > 0 ? format(s.volume24h) : "—"}
+                      </td>
+                      <td className="px-6 py-5 font-data text-sm hidden lg:table-cell" style={{ color: (s.fundingRate || 0) > 0 ? "var(--primary)" : (s.fundingRate || 0) < 0 ? "var(--secondary)" : "var(--text-dim)" }}>
+                        {s.fundingRate ? `${(s.fundingRate * 100).toFixed(3)}%` : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          {!loading && <div className="p-4 bg-[var(--surface-container)]/30 text-center">
+            <a href="/markets" className="font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors">View All Watchlist Assets ({ranked.length})</a>
+          </div>}
+        </section>
       </div>
     </div>
   );
