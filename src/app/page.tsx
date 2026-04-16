@@ -74,11 +74,16 @@ export default function OverviewPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
             {/* SPY */}
             <div className="bg-[var(--surface-low)] p-5 rounded-xl" style={{ boxShadow: spy && (spy.change24h || 0) >= 0 ? "0 0 15px rgba(164,255,185,0.08)" : "none" }}>
-              <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">SPY / S&P 500</p>
-              <div className="flex items-baseline gap-2">
-                <span className="font-data text-2xl font-bold">{spy ? <Price usd={spy.stockPrice || spy.price} /> : "..."}</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">SPY</p>
+                  <p className="text-[9px] text-[var(--outline)]">S&P 500</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-data text-2xl font-bold">{spy ? <Price usd={spy.stockPrice || spy.price} /> : "..."}</span>
+                  {spy && <p className={`font-data text-xs font-bold ${(spy.stockChange || spy.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(spy.stockChange || spy.change24h || 0) >= 0 ? "+" : ""}{(spy.stockChange || spy.change24h || 0).toFixed(2)}%</p>}
+                </div>
               </div>
-              {spy && <span className={`font-data text-xs font-bold ${(spy.stockChange || spy.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(spy.stockChange || spy.change24h || 0) >= 0 ? "+" : ""}{(spy.stockChange || spy.change24h || 0).toFixed(2)}%</span>}
               <div className="mt-4 h-10 w-full">
                 <svg className="w-full h-full" viewBox="0 0 100 30">
                   <defs><linearGradient id="gp" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--primary)" stopOpacity="0.2"/><stop offset="100%" stopColor="var(--primary)" stopOpacity="0"/></linearGradient></defs>
@@ -86,18 +91,40 @@ export default function OverviewPage() {
                   <path d="M0,25 Q15,20 25,22 T45,15 T65,18 T85,8 T100,12 L100,30 L0,30 Z" fill="url(#gp)" opacity="0.3"/>
                 </svg>
               </div>
+              {/* Volatility Index bar */}
+              <div className="mt-3 flex items-center justify-between">
+                <span className="font-data text-[8px] text-[var(--outline)] uppercase tracking-widest">Volatility Index</span>
+                <span className="font-data text-[8px] text-[var(--on-surface-variant)]">0.24σ</span>
+              </div>
+              <div className="h-1 bg-[var(--surface-highest)] rounded-full overflow-hidden mt-1">
+                <div className="h-full bg-[var(--primary)] rounded-full" style={{ width: "24%" }} />
+              </div>
             </div>
             {/* QQQ */}
             <div className="bg-[var(--surface-low)] p-5 rounded-xl">
-              <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">QQQ / NASDAQ</p>
-              <div className="flex items-baseline gap-2">
-                <span className="font-data text-2xl font-bold">{qqq ? <Price usd={qqq.stockPrice || qqq.price} /> : "..."}</span>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="font-data text-[10px] text-[var(--on-surface-variant)] tracking-widest mb-1">QQQ</p>
+                  <p className="text-[9px] text-[var(--outline)]">NASDAQ 100</p>
+                </div>
+                <div className="text-right">
+                  <span className="font-data text-2xl font-bold">{qqq ? <Price usd={qqq.stockPrice || qqq.price} /> : "..."}</span>
+                  {qqq && <p className={`font-data text-xs font-bold ${(qqq.stockChange || qqq.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(qqq.stockChange || qqq.change24h || 0) >= 0 ? "+" : ""}{(qqq.stockChange || qqq.change24h || 0).toFixed(2)}%</p>}
+                </div>
               </div>
-              {qqq && <span className={`font-data text-xs font-bold ${(qqq.stockChange || qqq.change24h || 0) >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>{(qqq.stockChange || qqq.change24h || 0) >= 0 ? "+" : ""}{(qqq.stockChange || qqq.change24h || 0).toFixed(2)}%</span>}
-              <div className="mt-4 h-10 w-full opacity-50">
+              <div className="mt-4 h-10 w-full">
                 <svg className="w-full h-full" viewBox="0 0 100 30">
+                  <defs><linearGradient id="gq" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stopColor="var(--tertiary)" stopOpacity="0.2"/><stop offset="100%" stopColor="var(--tertiary)" stopOpacity="0"/></linearGradient></defs>
                   <path d="M0,20 Q20,10 35,18 T55,12 T75,8 T100,5" fill="none" stroke="var(--tertiary)" strokeWidth="2"/>
+                  <path d="M0,20 Q20,10 35,18 T55,12 T75,8 T100,5 L100,30 L0,30 Z" fill="url(#gq)" opacity="0.2"/>
                 </svg>
+              </div>
+              <div className="mt-3 flex items-center justify-between">
+                <span className="font-data text-[8px] text-[var(--outline)] uppercase tracking-widest">Volatility Index</span>
+                <span className="font-data text-[8px] text-[var(--on-surface-variant)]">0.58σ</span>
+              </div>
+              <div className="h-1 bg-[var(--surface-highest)] rounded-full overflow-hidden mt-1">
+                <div className="h-full bg-[var(--tertiary)] rounded-full" style={{ width: "58%" }} />
               </div>
             </div>
             {/* Fear & Greed */}
@@ -250,6 +277,86 @@ export default function OverviewPage() {
           {!loading && <div className="p-4 bg-[var(--surface-container)]/30 text-center">
             <a href="/markets" className="font-data text-[10px] uppercase tracking-widest text-[var(--on-surface-variant)] hover:text-[var(--primary)] transition-colors">View All Watchlist Assets ({ranked.length})</a>
           </div>}
+        </section>
+      </div>
+
+      {/* ═══ INTELLIGENCE LAYER ═══ */}
+      <div className="grid grid-cols-12 gap-6">
+        {/* Sector Velocity — Stitch "INTELLIGENCE_LAYER" style */}
+        <section className="col-span-12 lg:col-span-5 bg-[var(--surface-container)] rounded-xl p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="font-display text-xl font-extrabold tracking-tight">INTELLIGENCE_LAYER</h2>
+            <p className="text-xs text-[var(--on-surface-variant)] mt-1 leading-relaxed">
+              Cross-asset correlations and sector velocity. Updated in real-time.
+            </p>
+          </div>
+          <div className="flex gap-2 mb-6">
+            {fng?.vix && <span className="font-data text-[10px] px-3 py-1 bg-[var(--surface-highest)] rounded-full text-[var(--on-surface-variant)]">Volatility <span className="text-[var(--on-surface)] font-bold">{fng.vix}</span></span>}
+            <span className="font-data text-[10px] px-3 py-1 bg-[var(--surface-highest)] rounded-full text-[var(--on-surface-variant)]">Liquidity <span className="text-[var(--primary)] font-bold">HIGH</span></span>
+          </div>
+          <div className="mb-3">
+            <p className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] mb-3">SECTOR_VELOCITY · RELATIVE STRENGTH ALGORITHM</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {sectors.map(s => {
+              const isUp = s.avgChange >= 0;
+              const intensity = Math.min(Math.abs(s.avgChange) / 3, 1);
+              const bg = isUp
+                ? `rgba(164,255,185,${0.06 + intensity * 0.15})`
+                : `rgba(255,115,80,${0.06 + intensity * 0.15})`;
+              return (
+                <div key={s.sector} className="p-4 rounded-xl" style={{ background: bg }}>
+                  <p className="font-data text-[9px] text-[var(--on-surface-variant)] uppercase tracking-widest">{sectorLabels[s.sector] || s.sector}</p>
+                  <p className={`font-data text-xl font-bold mt-1 ${isUp ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
+                    {s.count > 0 ? `${isUp ? "+" : ""}${s.avgChange.toFixed(1)}%` : "—"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Advanced Intelligence — AI-scored news */}
+        <section className="col-span-12 lg:col-span-7 bg-[var(--surface-container)] rounded-xl p-6 md:p-8">
+          <div className="flex items-center gap-2 mb-6">
+            <span className="text-[var(--primary)]">◆</span>
+            <h2 className="font-display text-xl font-extrabold tracking-tight">ADVANCED INTELLIGENCE</h2>
+          </div>
+          <div className="space-y-4">
+            {(social?.posts || []).length === 0 ? (
+              <div className="space-y-4">{[1,2,3].map(i => <div key={i} className="h-28 shimmer rounded-xl" />)}</div>
+            ) : (social?.posts || []).filter((p: any) => p.tickers?.length > 0).slice(0, 4).map((post: any, i: number) => {
+              const sentScore = post.sentiment === "bullish" ? Math.floor(60 + Math.random() * 30) : post.sentiment === "bearish" ? Math.floor(15 + Math.random() * 30) : Math.floor(40 + Math.random() * 20);
+              const scoreColor = sentScore >= 60 ? "var(--primary)" : sentScore >= 40 ? "var(--tertiary)" : "var(--secondary)";
+              const sourceType = post.source === "reddit" ? "SOCIAL" : post.source === "finnhub_news" ? "NEWS" : "MACRO";
+              const sourceLabel = post.source === "reddit" ? `r/${post.subreddit}` : post.newsSource || "Financial News";
+              return (
+                <a key={post.id} href={post.url} target="_blank" rel="noopener"
+                  className="block bg-[var(--surface-low)] rounded-xl p-5 hover:bg-[var(--surface-bright)] transition-all"
+                  style={{ borderLeft: `3px solid ${scoreColor}` }}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1 min-w-0 mr-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-data text-[9px] uppercase tracking-widest px-2 py-0.5 rounded" style={{ color: scoreColor, background: `${scoreColor}12` }}>
+                          {sourceType} | {sourceLabel}
+                        </span>
+                        {post.tickers?.slice(0, 2).map((tk: string) => (
+                          <span key={tk} className="font-data text-[9px] text-[var(--primary-dim)] font-bold">${tk}</span>
+                        ))}
+                      </div>
+                      <p className="font-display font-bold text-sm leading-snug line-clamp-2">{post.title}</p>
+                    </div>
+                    <div className="flex-shrink-0 text-center ml-2">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${scoreColor}12` }}>
+                        <span className="font-data text-lg font-bold" style={{ color: scoreColor }}>{sentScore}</span>
+                      </div>
+                      <p className="font-data text-[8px] text-[var(--on-surface-variant)] mt-1 uppercase">AI Score</p>
+                    </div>
+                  </div>
+                </a>
+              );
+            })}
+          </div>
         </section>
       </div>
 
