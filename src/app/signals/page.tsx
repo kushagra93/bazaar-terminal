@@ -42,8 +42,12 @@ export default function SignalsPage() {
   const { lang } = useLanguage();
 
   const analystRatings = sentiment?.analystRatings || [];
-  const defiTVL = sentiment?.defiTVL || [];
-  const rawTgFeed = telegram?.feed || [];
+  // Filter Telegram to US stock/macro relevant only (exclude pure crypto on-chain)
+  const rawTgFeed = (telegram?.feed || []).filter((msg: any) =>
+    msg.category === "macro" || msg.category === "news" ||
+    msg.category === "liquidations" || msg.category === "analytics" ||
+    /TSLA|NVDA|AAPL|MSFT|AMZN|META|GOOGL|SPY|QQQ|Fed|FOMC|CPI|rate|stock|earning|S&P|Nasdaq|treasury|GDP|inflation|payroll/i.test(msg.text || "")
+  );
   const tgSentiment = telegram?.sentiment;
   const tgLiquidations = telegram?.liquidations || [];
   const tgTrendingTokens = telegram?.trendingTokens || [];
@@ -249,28 +253,7 @@ export default function SignalsPage() {
         </section>
       )}
 
-      {/* ═══ 7. DEFI TVL ═══ */}
-      {defiTVL.length > 0 && (
-        <section>
-          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="DeFi TVL — Top Protocols" lang={lang} /></h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {defiTVL.slice(0, 5).map((p: any) => (
-              <div key={p.name} className="bg-[var(--surface-container)] rounded-xl p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  {p.logo && <img src={p.logo} alt="" className="w-4 h-4 rounded" onError={(e: any) => e.target.style.display = "none"} />}
-                  <span className="font-data text-xs font-bold truncate">{p.name}</span>
-                </div>
-                <span className="font-data text-sm font-bold">${(p.tvl / 1_000_000_000).toFixed(2)}B</span>
-                {p.change1d != null && (
-                  <span className={`font-data text-[9px] ml-1 ${p.change1d >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
-                    {p.change1d >= 0 ? "+" : ""}{p.change1d.toFixed(2)}%
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
+      {/* DeFi TVL removed — US stock perps focus only */}
 
       {/* ═══ 8. TOP ANALYSTS ═══ */}
       {analystRatings.length > 0 && (
