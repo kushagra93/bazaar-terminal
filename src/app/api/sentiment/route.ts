@@ -86,6 +86,25 @@ export async function GET() {
     } catch {}
   }
 
+  // DeFi Llama — Top protocols by TVL
+  try {
+    const tvlRes = await fetch("https://api.llama.fi/protocols");
+    if (tvlRes.ok) {
+      const protocols = await tvlRes.json();
+      result.defiTVL = protocols
+        .sort((a: any, b: any) => (b.tvl || 0) - (a.tvl || 0))
+        .slice(0, 10)
+        .map((p: any) => ({
+          name: p.name,
+          tvl: p.tvl,
+          change1d: p.change_1d,
+          category: p.category,
+          chain: p.chain,
+          logo: p.logo,
+        }));
+    }
+  } catch {}
+
   cache = { data: result, ts: Date.now() };
   return NextResponse.json(result);
 }

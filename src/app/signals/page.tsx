@@ -42,8 +42,11 @@ export default function SignalsPage() {
   const { lang } = useLanguage();
 
   const analystRatings = sentiment?.analystRatings || [];
+  const defiTVL = sentiment?.defiTVL || [];
   const rawTgFeed = telegram?.feed || [];
   const tgSentiment = telegram?.sentiment;
+  const tgLiquidations = telegram?.liquidations || [];
+  const tgTrendingTokens = telegram?.trendingTokens || [];
   const redditTrending = social?.trending || [];
   const rawNewsPosts = (social?.posts || []).filter((p: any) => p.source !== "reddit");
 
@@ -201,7 +204,75 @@ export default function SignalsPage() {
         </div>
       </section>
 
-      {/* ═══ 5. TOP ANALYSTS ═══ */}
+      {/* ═══ 5. LIQUIDATION HEATMAP ═══ */}
+      {tgLiquidations.length > 0 && (
+        <section>
+          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Liquidation Heatmap" lang={lang} /></h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {tgLiquidations.slice(0, 6).map((liq: any) => {
+              const total = (liq.long_usd || 0) + (liq.short_usd || 0);
+              const longPct = total > 0 ? (liq.long_usd / total) * 100 : 50;
+              return (
+                <div key={liq.asset} className="bg-[var(--surface-container)] rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-data text-sm font-bold">{liq.asset}</span>
+                    <span className="font-data text-[9px] text-[var(--on-surface-variant)]">{liq.count} events</span>
+                  </div>
+                  <div className="h-2 bg-[var(--surface-highest)] rounded-full overflow-hidden flex mb-2">
+                    <div className="h-full bg-[var(--primary)]" style={{ width: `${longPct}%` }} />
+                    <div className="h-full bg-[var(--secondary)]" style={{ width: `${100 - longPct}%` }} />
+                  </div>
+                  <div className="flex justify-between font-data text-[8px]">
+                    <span className="text-[var(--primary)]">Long ${(liq.long_usd / 1000).toFixed(0)}K</span>
+                    <span className="text-[var(--secondary)]">Short ${(liq.short_usd / 1000).toFixed(0)}K</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ═══ 6. TRENDING TOKENS (from Telegram) ═══ */}
+      {tgTrendingTokens.length > 0 && (
+        <section>
+          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Trending Tokens" lang={lang} /> <span className="text-[var(--outline)]">(2h)</span></h2>
+          <div className="flex flex-wrap gap-2">
+            {tgTrendingTokens.map((tk: any) => (
+              <div key={tk.token} className="flex items-center gap-1.5 bg-[var(--surface-container)] rounded-full px-3 py-1.5">
+                <StockLogo symbol={tk.token} size={16} />
+                <span className="font-data text-xs font-bold text-[var(--primary-dim)]">${tk.token}</span>
+                <span className="font-data text-[9px] text-[var(--on-surface-variant)]">{tk.mentions}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ═══ 7. DEFI TVL ═══ */}
+      {defiTVL.length > 0 && (
+        <section>
+          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="DeFi TVL — Top Protocols" lang={lang} /></h2>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {defiTVL.slice(0, 5).map((p: any) => (
+              <div key={p.name} className="bg-[var(--surface-container)] rounded-xl p-3">
+                <div className="flex items-center gap-2 mb-1">
+                  {p.logo && <img src={p.logo} alt="" className="w-4 h-4 rounded" onError={(e: any) => e.target.style.display = "none"} />}
+                  <span className="font-data text-xs font-bold truncate">{p.name}</span>
+                </div>
+                <span className="font-data text-sm font-bold">${(p.tvl / 1_000_000_000).toFixed(2)}B</span>
+                {p.change1d != null && (
+                  <span className={`font-data text-[9px] ml-1 ${p.change1d >= 0 ? "text-[var(--primary)]" : "text-[var(--secondary)]"}`}>
+                    {p.change1d >= 0 ? "+" : ""}{p.change1d.toFixed(2)}%
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ═══ 8. TOP ANALYSTS ═══ */}
       {analystRatings.length > 0 && (
         <section>
           <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Top Analysts" lang={lang} /></h2>

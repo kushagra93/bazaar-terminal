@@ -16,16 +16,22 @@ export async function GET() {
   }
 
   try {
-    const [feedRes, sentRes, trendRes] = await Promise.all([
+    const [feedRes, sentRes, trendRes, liqRes, tokensRes, breakingRes] = await Promise.all([
       fetch(`${TG_FEED_URL}/api/feed?limit=50`).then(r => r.ok ? r.json() : []),
       fetch(`${TG_FEED_URL}/api/sentiment`).then(r => r.ok ? r.json() : null),
       fetch(`${TG_FEED_URL}/api/trending`).then(r => r.ok ? r.json() : []),
+      fetch(`${TG_FEED_URL}/api/liquidations/heatmap?hours=4`).then(r => r.ok ? r.json() : []),
+      fetch(`${TG_FEED_URL}/api/tokens/trending`).then(r => r.ok ? r.json() : []),
+      fetch(`${TG_FEED_URL}/api/breaking`).then(r => r.ok ? r.json() : []),
     ]);
 
     const result = {
       feed: feedRes,
       sentiment: sentRes,
       trending: trendRes,
+      liquidations: liqRes,
+      trendingTokens: tokensRes,
+      breaking: breakingRes,
       source: "telegram",
       fetchedAt: new Date().toISOString(),
     };

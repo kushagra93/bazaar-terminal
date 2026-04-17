@@ -3,6 +3,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { NavBar } from "@/components/NavBar";
 import { MobileNav } from "@/components/MobileNav";
+import { BreakingBanner } from "@/components/BreakingBanner";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="min-h-screen">
         <Providers>
+          <BreakingBanner />
           {/* Desktop nav — hidden on mobile */}
           <div className="hidden md:block">
             <NavBar />
