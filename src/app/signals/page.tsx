@@ -5,6 +5,12 @@ import { useLanguage } from "@/lib/language";
 import { useSignals, useSocial, useTelegram, useSentiment } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
 import { getSessionInfo } from "@/lib/session";
+import { useTranslatedItems, useTranslatedText } from "@/lib/translate";
+
+function T({ text, lang }: { text: string; lang: string }) {
+  const translated = useTranslatedText(text, lang);
+  return <>{translated}</>;
+}
 
 function ConfBar({ value, color }: { value: number; color: string }) {
   return (
@@ -33,11 +39,18 @@ export default function SignalsPage() {
   const { t } = useLanguage();
   const session = getSessionInfo();
 
+  const { lang } = useLanguage();
+
   const analystRatings = sentiment?.analystRatings || [];
-  const tgFeed = telegram?.feed || [];
+  const rawTgFeed = telegram?.feed || [];
   const tgSentiment = telegram?.sentiment;
   const redditTrending = social?.trending || [];
-  const newsPosts = (social?.posts || []).filter((p: any) => p.source !== "reddit");
+  const rawNewsPosts = (social?.posts || []).filter((p: any) => p.source !== "reddit");
+
+  // Deep translate dynamic content when language != English
+  const tgFeed = useTranslatedItems(rawTgFeed, lang, ["text"]);
+  const newsPosts = useTranslatedItems(rawNewsPosts, lang, ["title"]);
+  // Signal reasons are arrays — we'll translate inline per card
 
   return (
     <div className="max-w-[800px] mx-auto space-y-8">
@@ -51,15 +64,15 @@ export default function SignalsPage() {
             <span className="font-data text-[9px] uppercase tracking-widest font-bold">{t(`sessions.${session.key}`)}</span>
           </div>
         </div>
-        <p className="text-xs text-[var(--on-surface-variant)]">Multi-source intelligence consolidated...</p>
+        <p className="text-xs text-[var(--on-surface-variant)]"><T text="Multi-source intelligence consolidated..." lang={lang} /></p>
       </div>
 
       {/* ═══ 1. TECHNICAL SIGNALS ═══ */}
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold">Technical Signals</h2>
+          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold"><T text="Technical Signals" lang={lang} /></h2>
           <span className="font-data text-[9px] text-[var(--primary-dim)] uppercase tracking-widest flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> Live Updates
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--primary-dim)] animate-pulse" /> <T text="Live Updates" lang={lang} />
           </span>
         </div>
         {sigLoading ? (
@@ -84,7 +97,7 @@ export default function SignalsPage() {
                     </div>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="font-data text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)]">Breakout Probability</span>
+                    <span className="font-data text-[10px] uppercase tracking-wider text-[var(--on-surface-variant)]"><T text="Breakout Probability" lang={lang} /></span>
                     <span className="font-data text-xs font-bold" style={{ color }}>{sig.confidence}%</span>
                   </div>
                   <ConfBar value={sig.confidence} color={color} />
@@ -108,7 +121,7 @@ export default function SignalsPage() {
 
       {/* ═══ 2. NEWS INTELLIGENCE ═══ */}
       <section>
-        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3">News Intelligence</h2>
+        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="News Intelligence" lang={lang} /></h2>
         <div className="space-y-2">
           {newsPosts.length === 0 ? <div className="h-24 shimmer rounded-xl" /> :
             newsPosts.slice(0, 4).map((post: any) => {
@@ -140,7 +153,7 @@ export default function SignalsPage() {
 
       {/* ═══ 3. SOCIAL PULSE ═══ */}
       <section>
-        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3">Social Pulse</h2>
+        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Social Pulse" lang={lang} /></h2>
         <div className="flex flex-wrap gap-2">
           {redditTrending.slice(0, 6).map((tk: any) => (
             <div key={tk.symbol} className="flex items-center gap-1.5 bg-[var(--surface-container)] rounded-full px-3 py-1.5">
@@ -155,7 +168,7 @@ export default function SignalsPage() {
 
       {/* ═══ 4. TELEGRAM ALPHA ═══ */}
       <section>
-        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3">Telegram Alpha</h2>
+        <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Telegram Alpha" lang={lang} /></h2>
         {/* Sentiment bar */}
         {tgSentiment && (
           <div className="mb-4">
@@ -174,7 +187,7 @@ export default function SignalsPage() {
         {/* Messages */}
         <div className="space-y-2">
           {tgFeed.length === 0 ? (
-            <div className="bg-[var(--surface-container)] rounded-xl p-4 text-center text-xs text-[var(--on-surface-variant)]">Telegram feed connecting...</div>
+            <div className="bg-[var(--surface-container)] rounded-xl p-4 text-center text-xs text-[var(--on-surface-variant)]"><T text="Telegram feed connecting..." lang={lang} /></div>
           ) : tgFeed.slice(0, 4).map((msg: any) => (
             <div key={msg.id} className="bg-[var(--surface-container)] rounded-xl p-4">
               <div className="flex items-center gap-2 mb-1.5">
@@ -191,7 +204,7 @@ export default function SignalsPage() {
       {/* ═══ 5. TOP ANALYSTS ═══ */}
       {analystRatings.length > 0 && (
         <section>
-          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3">Top Analysts</h2>
+          <h2 className="font-data text-[11px] text-[var(--on-surface-variant)] uppercase tracking-[0.2em] font-bold mb-3"><T text="Top Analysts" lang={lang} /></h2>
           <div className="grid grid-cols-2 gap-3">
             {analystRatings.slice(0, 4).map((r: any) => (
               <div key={r.symbol} className="bg-[var(--surface-container)] rounded-xl p-4">

@@ -4,6 +4,7 @@ import { useCurrency } from "@/lib/currency";
 import { useLanguage } from "@/lib/language";
 import { useSentiment, useSocial } from "@/lib/data";
 import { StockLogo } from "@/components/StockLogo";
+import { useTranslatedItems, useTranslatedText } from "@/lib/translate";
 
 function FearGreedDial({ score, label }: { score: number; label: string }) {
   const angle = 180 - (score / 100) * 180;
@@ -53,16 +54,29 @@ function timeAgo(ts: number): string {
   return `${Math.floor(hours / 24)}d`;
 }
 
+function TranslatedSummary({ fng, lang }: { fng: any; lang: string }) {
+  const text = fng && fng.value >= 55
+    ? `The market is currently exhibiting ${fng.label}. While retail sentiment on Reddit shows signs of optimism, institutional positioning suggests caution. Watch for a Sentiment Divergence if social activity continues to climb while prices consolidate.`
+    : fng && fng.value < 45
+    ? `Fear is elevated with the index at ${fng.value}. Reddit discussions are dominated by defensive positioning. This historically signals potential buying opportunities for contrarian traders, but wait for VIX to peak before going long.`
+    : `Neutral sentiment territory. The market is balanced between bulls and bears. Key upcoming events like FOMC and earnings will likely determine the next directional move. Position sizing should remain conservative.`;
+  const translated = useTranslatedText(text, lang);
+  return <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed mb-4">{translated}</p>;
+}
+
 export default function SentimentPage() {
   const { sentiment, loading: sentLoading } = useSentiment();
   const { social, loading: socLoading } = useSocial();
   const { format } = useCurrency();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
   const fng = sentiment?.fearGreed;
   const analystRatings = sentiment?.analystRatings || [];
-  const posts = social?.posts || [];
+  const rawPosts = social?.posts || [];
   const trending = social?.trending || [];
+
+  // Deep translate posts when language is not English
+  const posts = useTranslatedItems(rawPosts, lang, ["title"]);
 
   return (
     <div className="max-w-[1400px] mx-auto space-y-10">
@@ -241,14 +255,7 @@ export default function SentimentPage() {
           {/* Sentiment Summary */}
           <div className="bg-[var(--surface-container)] rounded-[1.5rem] p-8">
             <h3 className="font-display font-bold mb-4">{t("sentiment.summary")}</h3>
-            <p className="text-sm text-[var(--on-surface-variant)] leading-relaxed mb-4">
-              {fng && fng.value >= 55
-                ? `The market is currently exhibiting ${fng.label}. While retail sentiment on Reddit shows signs of optimism, institutional positioning suggests caution. Watch for a "Sentiment Divergence" if social activity continues to climb while prices consolidate.`
-                : fng && fng.value < 45
-                ? `Fear is elevated with the index at ${fng.value}. Reddit discussions are dominated by defensive positioning. This historically signals potential buying opportunities for contrarian traders, but wait for VIX to peak before going long.`
-                : `Neutral sentiment territory. The market is balanced between bulls and bears. Key upcoming events (FOMC, earnings) will likely determine the next directional move. Position sizing should remain conservative.`
-              }
-            </p>
+            <TranslatedSummary fng={fng} lang={lang} />
             <div className="flex gap-2">
               <span className="px-4 py-2 bg-[var(--primary)]/10 text-[var(--primary-dim)] rounded-full font-data text-xs font-bold">{fng && fng.value >= 50 ? t("sentiment.favor_longs") : t("sentiment.favor_shorts")}</span>
               <span className="px-4 py-2 bg-[var(--surface-highest)] text-[var(--on-surface-variant)] rounded-full font-data text-xs font-bold">{t("sentiment.low_volatility")}</span>
